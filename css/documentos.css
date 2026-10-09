@@ -1,0 +1,30 @@
+/* Páginas de documentos (Termos de Uso, Política de Privacidade): leitura confortável, mesmo visual da página inicial */
+.doc-topo { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.doc-topo .wrap { display: flex; align-items: center; justify-content: space-between; height: 66px; gap: 12px; }
+.doc { max-width: 780px; margin: 0 auto; padding: 56px 20px 90px; }
+.doc h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); margin: 10px 0 8px; }
+.doc .atualizado { color: var(--muted); font-size: .92rem; }
+.doc .resumo { margin: 28px 0 8px; padding: 20px 22px; border-radius: var(--raio); background: var(--card); border: 1px solid var(--line); }
+.doc .resumo h2 { font-size: 1.25rem; margin: 0 0 8px; }
+.doc .resumo ul { margin: 0; }
+.doc nav.indice { margin: 26px 0; display: grid; gap: 4px; font-size: .95rem; }
+.doc nav.indice a { color: var(--cobre-txt); }
+.doc h2 { font-size: 1.6rem; margin: 44px 0 12px; scroll-margin-top: 90px; }
+.doc h3 { font-size: 1.15rem; margin: 22px 0 8px; }
+.doc p, .doc li { color: color-mix(in srgb, var(--text) 86%, var(--muted)); line-height: 1.7; }
+.doc p + p { margin-top: 10px; }
+.doc ul, .doc ol { padding-left: 22px; margin: 10px 0; display: grid; gap: 6px; }
+.doc a { text-decoration: underline; text-underline-offset: 3px; }
+.doc mark { background: color-mix(in srgb, #ffb020 30%, transparent); color: inherit; padding: 0 4px; border-radius: 4px; }
+.doc table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+.doc th, .doc td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.doc th { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 600px) {
+  .doc table, .doc thead, .doc tbody, .doc tr, .doc td { display: block; }
+  .doc thead { display: none; }
+  .doc tr { border-top: 1px solid var(--line); padding: 8px 0; }
+  .doc td { border: 0; padding: 4px 0; }
+  .doc td::before { content: attr(data-r); display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+}
+.doc-rodape { border-top: 1px solid var(--line); padding: 26px 0; color: var(--muted); font-size: .9rem; }
+.doc-rodape .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }

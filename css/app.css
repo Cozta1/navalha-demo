@@ -90,3 +90,10 @@ input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--blue)
 
 /* celular: a página nunca rola para o lado */
 html, body { overflow-x: clip; }
+
+/* ---------- conteúdo nunca sai da caixa ---------- */
+body { overflow-wrap: break-word; }
+img, video, iframe, svg { max-width: 100%; }
+.btn { flex-shrink: 0; max-width: 100%; }
+.row > input, .row > select, .row > textarea, .row > .grow { min-width: 0; flex: 1 1 140px; }
+.grid2 > *, .card, .item > *, .tr > * { min-width: 0; }

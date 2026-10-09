@@ -7,12 +7,12 @@
   const st = { servicos: [], prof: null, data: null, slot: null };
   let barb, servicos, profs, jornadas, profServ, notas = { profissionais: {} }, sessao = null, promocoes = [];
 
-  if (!slug) { app.innerHTML = `<div class="vazio">Link de agendamento incompleto. Peça o link certo para a barbearia.</div>`; return; }
+  if (!slug) { app.innerHTML = `<div class="vazio">Link de agendamento incompleto. Peça o link certo para o estabelecimento.</div>`; return; }
 
   try {
     const { data, error } = await sb.from("barbearias").select("*").eq("slug", slug).maybeSingle();
     if (error) throw error;
-    if (!data) { app.innerHTML = `<div class="vazio">Barbearia não encontrada.</div>`; return; }
+    if (!data) { app.innerHTML = `<div class="vazio">Estabelecimento não encontrado.</div>`; return; }
     barb = data;
     const [s, p, j, ps, rv, ss, pm] = await Promise.all([
       sb.from("servicos").select("*").eq("barbearia_id", barb.id).eq("ativo", true).order("ordem").order("nome"),
@@ -36,7 +36,7 @@
 
   aplicarTema(barb);
   document.title = `Agendar · ${barb.nome}`;
-  // capa da barbearia: foto, logo, nome, nota e endereço (o Navalha só aparece no rodapé)
+  // capa da barbearia: foto, logo, nome, nota e endereço (o Marcaí só aparece no rodapé)
   const capa = barb.hero_url || (Array.isArray(barb.fotos) && barb.fotos[0]?.url) || null;
   const bairro = barb.endereco ? barb.endereco.split(/[,–-]/).map(x => x.trim()).filter(Boolean).slice(-2).join(", ") : "";
   $("#cabecalho").innerHTML = `<div class="capa-b ${capa ? "" : "sem-foto"}">
@@ -116,7 +116,7 @@
     const aptos = profsAptos();
     app.innerHTML = `<section class="etapa anima-etapa"><h2>Com <em>quem</em>?</h2><p class="sub">${esc(st.servicos.map(s => s.nome).join(" + "))}</p>
       <div class="opcoes cascata">
-        <button class="opcao" data-id=""><div class="av">✂</div><div><b>Sem preferência</b><span class="desc">Primeiro profissional livre</span></div></button>
+        <button class="opcao" data-id=""><div class="av">✦</div><div><b>Sem preferência</b><span class="desc">Primeiro profissional livre</span></div></button>
         ${aptos.map(p => { const t = totais(p.id), nt = notas.profissionais?.[p.id]; return `<button class="opcao" data-id="${p.id}"><div class="av">${avatar(p)}</div><div><b>${esc(p.nome)}</b>${nt ? `<span class="desc">★ ${String(nt.media).replace(".", ",")} · ${nt.total} avaliaç${nt.total > 1 ? "ões" : "ão"}</span>` : ""}</div>
           <div class="preco">${dinheiro(t.preco)}<small>${fmtDuracao(t.duracao)}</small></div></button>`; }).join("")}
       </div><button class="voltar">← trocar serviços</button></section>`;
@@ -179,7 +179,7 @@
     const servico = st.servicos[0];
     box.innerHTML = `<div class="espera">
       <h3>${voluntario ? "Lista de espera" : "Dia cheio"}</h3>
-      <p class="muted small" style="margin:6px 0 4px">Se abrir uma vaga em <b style="color:var(--text)">${esc(fmtDataLonga(dataHoraNoFuso(d, "12:00", barb.fuso), barb.fuso))}</b>, a barbearia te chama no WhatsApp${st.servicos.length > 1 ? ` (para ${esc(servico.nome)})` : ""}.</p>
+      <p class="muted small" style="margin:6px 0 4px">Se abrir uma vaga em <b style="color:var(--text)">${esc(fmtDataLonga(dataHoraNoFuso(d, "12:00", barb.fuso), barb.fuso))}</b>, o estabelecimento te chama no WhatsApp${st.servicos.length > 1 ? ` (para ${esc(servico.nome)})` : ""}.</p>
       <form id="fe">
         <div class="periodos">${[["qualquer", "Qualquer hora"], ["manha", "Manhã"], ["tarde", "Tarde"], ["noite", "Noite"]].map(([v, t], i) =>
           `<label><input type="radio" name="per" value="${v}" ${i ? "" : "checked"}><span class="mono small">${t}</span></label>`).join("")}</div>
@@ -200,7 +200,7 @@
       });
       if (error) { err.textContent = msgErro(error); err.classList.remove("hidden"); return; }
       guarda.gravar("navalha_cliente", { ...salvo, nome: $("#en").value.trim(), telefone: soDigitos($("#et").value) });
-      box.innerHTML = `<div class="espera"><h3>Você está na lista ✓</h3><p class="muted small mt">Se abrir vaga, a barbearia te chama no WhatsApp. Enquanto isso, dá para escolher outro dia acima.</p></div>`;
+      box.innerHTML = `<div class="espera"><h3>Você está na lista ✓</h3><p class="muted small mt">Se abrir vaga, o estabelecimento te chama no WhatsApp. Enquanto isso, dá para escolher outro dia acima.</p></div>`;
     };
   }
 
@@ -233,6 +233,7 @@
           <button type="button" class="btn btn-ghost" id="aplicar">Aplicar</button></div><p class="small hidden" id="cupom-msg"></p></div>
         <p class="muted small" style="margin-bottom:14px">Você pode cancelar ou trocar o horário até ${barb.cancelamento_horas}h antes, pelo link que aparece depois de confirmar.</p>
         <button class="btn btn-blue btn-block" id="conf">Confirmar agendamento</button>
+        <p class="muted small aviso-dados">Seus dados são usados por ${esc(barb.nome)} para cuidar do seu horário. <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></p>
         <p class="erro hidden" id="err"></p>
       </form>
       <button class="voltar">← trocar horário</button></section>`;
@@ -291,7 +292,7 @@
       <p class="muted">${esc(servs)} com ${esc(prof.nome)}<br><b style="color:var(--text)">${esc(quando)}</b></p>
       <div class="opcoes mt2">
         <button class="btn btn-ghost" id="ics">Adicionar ao calendário</button>
-        ${barb.whatsapp ? `<a class="btn btn-green" target="_blank" rel="noopener" href="${linkWhats(barb.whatsapp, msg)}">Avisar a barbearia no WhatsApp</a>` : ""}
+        ${barb.whatsapp ? `<a class="btn btn-green" target="_blank" rel="noopener" href="${linkWhats(barb.whatsapp, msg)}">Avisar pelo WhatsApp</a>` : ""}
         <a class="btn btn-ghost" href="${esc(linkGestao)}">Ver, trocar ou cancelar</a>
       </div>
       <p class="muted small mt">Guarde este link para trocar ou cancelar até ${barb.cancelamento_horas}h antes.</p>

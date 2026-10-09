@@ -53,7 +53,7 @@
 
   /* ========= Hero ========= */
   .hero { padding: 54px 0 0; overflow: hidden; }
-  .hero .grade { display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: end; }
+  .hero .grade { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 40px; align-items: end; }
   @media (max-width: 900px) { .hero .grade { grid-template-columns: 1fr; } .hero .grade > * { min-width: 0; } }
   .hero .titulo { font-size: clamp(4.2rem, 13vw, 10.5rem); }
   .hero .titulo span { display: block; }
@@ -82,7 +82,7 @@
   /* ========= Faixa rolando ========= */
   .faixa { background: var(--azul); color: #fff; overflow: hidden; transform: rotate(-1.5deg); margin: 0 -20px; border-top: 2px solid var(--asfalto); border-bottom: 2px solid var(--asfalto); }
   .faixa div { display: flex; gap: 38px; width: max-content; padding: 14px 0; animation: rola 28s linear infinite; font-family: var(--display); font-weight: 900; font-size: 1.9rem; text-transform: uppercase; letter-spacing: .02em; }
-  .faixa span::after { content: "✂"; margin-left: 38px; font-size: 1.2rem; vertical-align: middle; }
+  .faixa span::after { content: var(--icone, "✂"); margin-left: 38px; font-size: 1.2rem; vertical-align: middle; }
   @keyframes rola { to { transform: translateX(-50%); } }
 
   /* ========= Preços: cartaz colado na parede ========= */
@@ -211,6 +211,133 @@ body.classico { --azul-claro: color-mix(in srgb, var(--azul) 75%, black); }
 body.classico .btn-claro { background: var(--cartaz); color: var(--asfalto); border-color: var(--cartaz); }
 body.classico .btn-claro:hover { box-shadow: 6px 6px 0 var(--azul); }
 body.classico .qtd .estrelas, body.classico .fatos .estrelas { color: #c48a00; }
+
+/* ========= Arte da capa (quando não há foto): monograma e formas na cor da marca ========= */
+.arte { position: absolute; inset: 0; overflow: hidden; display: grid; place-items: center;
+  background: radial-gradient(120% 90% at 80% 10%, color-mix(in srgb, var(--azul) 55%, transparent), transparent 60%),
+              linear-gradient(160deg, var(--concreto-2), var(--asfalto)); }
+.arte i { position: absolute; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--cartaz) 22%, transparent); }
+.arte i:nth-child(1) { width: 78%; aspect-ratio: 1; left: -18%; bottom: -30%; }
+.arte i:nth-child(2) { width: 52%; aspect-ratio: 1; right: -10%; top: -12%; background: color-mix(in srgb, var(--azul) 30%, transparent); border: 0; filter: blur(2px); }
+.arte i:nth-child(3) { width: 24%; aspect-ratio: 1; right: 22%; bottom: 14%; background: var(--azul); border: 0; }
+.arte span { position: relative; font-family: var(--display); font-size: clamp(5rem, 11vw, 10rem); line-height: 1; color: var(--cartaz); letter-spacing: -.04em; }
+@media (max-width: 900px) { .hero-foto .arte { margin: 0; } }
+
+/* ========= Tema elegante (salão): marfim, ameixa e serifa delicada ========= */
+body.elegante {
+  --asfalto: #f7f0ec; --concreto: #f0e5df; --concreto-2: #e6d6cd; --cartaz: #2b1d23; --tinta: #2b1d23; --cinza: #85707a;
+  --linha: #e2d2ca; --topo: rgba(247,240,236,.92); --texto-2: #5b4850; --tinta-2: #85707a;
+  --display: "Cormorant Garamond", Georgia, serif; --mono: "Jost", system-ui, sans-serif; --texto: "Jost", system-ui, sans-serif;
+  --azul-claro: color-mix(in srgb, var(--azul) 80%, black); --ruido: none;
+}
+body.elegante .titulo { text-transform: none; font-weight: 600; letter-spacing: -.01em; line-height: .95; }
+body.elegante .titulo .fino { font-style: italic; font-weight: 500; }
+body.elegante .rotulo { letter-spacing: .22em; }
+body.elegante .btn { border-radius: 999px; border-width: 1px; text-transform: none; letter-spacing: .02em; font-weight: 500; }
+body.elegante .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px color-mix(in srgb, var(--azul) 30%, transparent); }
+body.elegante .btn-claro { background: var(--cartaz); color: var(--asfalto); border-color: var(--cartaz); }
+body.elegante .faixa { transform: none; margin: 0; background: transparent; color: var(--azul); border-color: var(--linha); }
+body.elegante .faixa div { font-family: var(--display); font-style: italic; font-weight: 500; text-transform: none; font-size: 1.7rem; }
+body.elegante .cartaz { background: #fffaf7; color: var(--tinta); transform: none; border-radius: 28px; box-shadow: 0 30px 60px -30px rgba(80,30,50,.35); border: 1px solid var(--linha); }
+body.elegante .cartaz::before, body.elegante .cartaz::after { display: none; }
+body.elegante .cartaz h3, body.elegante .item-preco b, body.elegante .local .end, body.elegante .equipe b, body.elegante .citacao blockquote { text-transform: none; font-weight: 600; }
+body.elegante .item-preco { border-bottom-style: solid; border-color: var(--linha); }
+body.elegante .item-preco i { border-bottom: 1px solid var(--linha); }
+body.elegante .hero-foto .foto { clip-path: none; border-radius: 200px 200px 24px 24px; }
+body.elegante .hero-foto .arte { border-radius: 260px 260px 28px 28px; }
+body.elegante .hero-foto .foto::after { background: none; }
+body.elegante .mosaico figure, body.elegante .equipe > div { border-radius: 20px; }
+body.elegante .local .grade { border: 1px solid var(--linha); border-radius: 28px; overflow: hidden; }
+body.elegante .mapa { border-color: var(--linha); }
+body.elegante .mapa iframe { filter: sepia(.2) saturate(.8); }
+body.elegante .letreiro { -webkit-text-stroke: 1px rgba(43,29,35,.07); font-style: italic; }
+body.elegante .controles button { border-radius: 50%; border-width: 1px; }
+body.elegante .qtd .estrelas, body.elegante .fatos .estrelas { color: #c48a2a; }
+body.elegante .btn-azul, body.elegante .barra-cel .ag { color: #fff; }
+body.elegante .avaliacoes { background: var(--concreto); }
+
+/* ========= Tema doce (unhas): rosa claro, bolhas e serifa com graça ========= */
+body.doce {
+  --asfalto: #fff4f7; --concreto: #ffe8ef; --concreto-2: #ffd7e3; --cartaz: #3a1730; --tinta: #3a1730; --cinza: #9a6f85;
+  --linha: #f6cfdc; --topo: rgba(255,244,247,.92); --texto-2: #6b4560; --tinta-2: #9a6f85;
+  --display: "DM Serif Display", Georgia, serif; --mono: "Nunito", system-ui, sans-serif; --texto: "Nunito", system-ui, sans-serif;
+  --azul-claro: color-mix(in srgb, var(--azul) 80%, black); --ruido: none;
+}
+body.doce { background: radial-gradient(60% 40% at 90% 0%, color-mix(in srgb, var(--azul) 18%, transparent), transparent), var(--asfalto); }
+body.doce .titulo { text-transform: none; font-weight: 400; letter-spacing: -.01em; line-height: .98; }
+body.doce .titulo .fino { font-style: italic; }
+body.doce .rotulo { font-weight: 700; }
+body.doce .btn { border-radius: 999px; border: 0; text-transform: none; letter-spacing: 0; font-weight: 700; padding: 15px 26px; background: #fff; color: var(--tinta); box-shadow: 0 6px 18px rgba(160,40,90,.12); }
+body.doce .btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 26px rgba(160,40,90,.22); }
+body.doce .btn-azul { background: var(--azul); color: #fff; }
+body.doce .btn-claro { background: var(--cartaz); color: #fff; }
+body.doce .faixa { transform: rotate(-1deg); background: linear-gradient(90deg, var(--azul), color-mix(in srgb, var(--azul) 55%, #ffb36b)); border: 0; border-radius: 0; }
+body.doce .faixa div { font-family: var(--display); text-transform: none; font-weight: 400; }
+body.doce .cartaz { background: #fff; color: var(--tinta); transform: rotate(-1deg); border-radius: 32px; box-shadow: 12px 12px 0 color-mix(in srgb, var(--azul) 35%, #fff); }
+body.doce .cartaz::before, body.doce .cartaz::after { display: none; }
+body.doce .cartaz h3, body.doce .item-preco b, body.doce .local .end, body.doce .equipe b, body.doce .citacao blockquote { text-transform: none; font-weight: 400; }
+body.doce .item-preco { border-bottom: 2px dotted var(--linha); }
+body.doce .item-preco i { border-bottom: 0; }
+body.doce .item-preco span { background: var(--concreto); padding: 2px 10px; border-radius: 999px; }
+body.doce .hero-foto .foto, body.doce .hero-foto .arte { clip-path: none; border-radius: 48% 52% 44% 56% / 52% 46% 54% 48%; }
+body.doce .hero-foto .foto::after { background: none; }
+body.doce .arte { background: radial-gradient(circle at 30% 30%, #fff, transparent 40%), linear-gradient(135deg, color-mix(in srgb, var(--azul) 60%, #fff), color-mix(in srgb, var(--azul) 30%, #ffd1a8)); }
+body.doce .arte span { color: #fff; text-shadow: 0 6px 24px rgba(120,20,60,.25); }
+body.doce .arte i { border-color: rgba(255,255,255,.6); }
+body.doce .arte i:nth-child(3) { background: #fff; opacity: .7; }
+body.doce .mosaico figure, body.doce .equipe > div { border-radius: 24px; }
+body.doce .local .grade { border: 0; background: #fff; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 50px -30px rgba(160,40,90,.4); }
+body.doce .mapa { border: 0; }
+body.doce .mapa iframe { filter: saturate(.7) hue-rotate(-10deg); }
+body.doce .letreiro { display: none; }
+body.doce .controles button { border-radius: 50%; border: 0; background: #fff; color: var(--tinta); }
+body.doce .avaliacoes { background: var(--concreto); border: 0; }
+body.doce .qtd .estrelas, body.doce .fatos .estrelas { color: #e0a000; }
+body.doce .barra-cel .ag { color: #fff; }
+
+/* ========= Tema minimal (sobrancelhas e cílios): nude, linhas finas e muito respiro ========= */
+body.minimal {
+  --asfalto: #f3eee8; --concreto: #ece5dd; --concreto-2: #e1d7cc; --cartaz: #1d1916; --tinta: #1d1916; --cinza: #8b8178;
+  --linha: #ddd3c8; --topo: rgba(243,238,232,.92); --texto-2: #5a524b; --tinta-2: #8b8178;
+  --display: "Italiana", Georgia, serif; --mono: "Manrope", system-ui, sans-serif; --texto: "Manrope", system-ui, sans-serif;
+  --azul-claro: color-mix(in srgb, var(--azul) 75%, black); --ruido: none;
+}
+body.minimal .titulo { font-weight: 400; letter-spacing: .02em; line-height: 1; }
+body.minimal .titulo .fino { font-weight: 400; color: var(--cinza); }
+body.minimal .rotulo { letter-spacing: .3em; font-size: .7rem; }
+body.minimal .btn { border-width: 1px; border-radius: 0; font-weight: 600; letter-spacing: .18em; font-size: .78rem; }
+body.minimal .btn:hover { transform: none; box-shadow: none; background: var(--cartaz); color: var(--asfalto); }
+body.minimal .btn-azul { background: var(--cartaz); border-color: var(--cartaz); color: var(--asfalto); }
+body.minimal .btn-azul:hover { background: var(--azul); border-color: var(--azul); color: #fff; }
+body.minimal .btn-claro { background: transparent; color: var(--cartaz); border-color: var(--cartaz); }
+body.minimal .faixa { transform: none; margin: 0; background: transparent; color: var(--cartaz); border-color: var(--linha); }
+body.minimal .faixa div { font-family: var(--display); font-weight: 400; font-size: 1.6rem; letter-spacing: .12em; }
+body.minimal .cartaz { background: transparent; color: var(--tinta); transform: none; box-shadow: none; border: 1px solid var(--cartaz); padding: 40px 36px; }
+body.minimal .cartaz::before, body.minimal .cartaz::after { display: none; }
+body.minimal .cartaz h3 { font-weight: 400; border-bottom-width: 1px; }
+body.minimal .item-preco b, body.minimal .local .end, body.minimal .equipe b, body.minimal .citacao blockquote { font-weight: 400; letter-spacing: .04em; }
+body.minimal .item-preco { border-bottom: 1px solid var(--linha); }
+body.minimal .item-preco i { border-bottom: 1px solid var(--linha); transform: translateY(-6px); }
+body.minimal .cartaz .rodape { border-top-width: 1px; }
+body.minimal .hero-foto .foto { clip-path: none; }
+body.minimal .hero-foto .foto::after { background: none; }
+body.minimal .arte { background: linear-gradient(180deg, var(--concreto), var(--concreto-2)); }
+body.minimal .arte i { border-color: color-mix(in srgb, var(--cartaz) 25%, transparent); }
+body.minimal .arte i:nth-child(2) { background: none; border: 1px solid color-mix(in srgb, var(--azul) 60%, transparent); filter: none; }
+body.minimal .arte i:nth-child(3) { width: 10px; right: 30%; bottom: 30%; }
+body.minimal .local .grade, body.minimal .mapa { border-width: 1px; }
+body.minimal .mapa iframe { filter: grayscale(1) contrast(.9) brightness(1.05); }
+body.minimal .letreiro { -webkit-text-stroke: 1px rgba(29,25,22,.06); }
+body.minimal .controles button { border-width: 1px; }
+body.minimal .avaliacoes { background: var(--concreto); }
+body.minimal .qtd .estrelas, body.minimal .fatos .estrelas { color: var(--azul-claro); }
+body.minimal .barra-cel .ag { background: var(--cartaz); color: var(--asfalto); }
+
+/* títulos da capa: cada estilo no tamanho que cabe na coluna */
+body.elegante .hero .titulo { font-size: clamp(3.4rem, 7.4vw, 7.4rem); }
+body.doce .hero .titulo { font-size: clamp(3.2rem, 7vw, 7rem); }
+body.minimal .hero .titulo { font-size: clamp(2.8rem, 5.8vw, 5.8rem); }
+body.minimal .precos .titulo, body.minimal .cab .titulo, body.minimal .final .titulo { font-size: clamp(2.6rem, 5.6vw, 5rem); }
 
 /* celular: a página nunca rola para o lado */
 html, body { overflow-x: clip; }

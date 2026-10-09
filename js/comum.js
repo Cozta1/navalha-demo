@@ -83,6 +83,10 @@ function toast(msg, tipo = "ok") {
 }
 
 // Mensagem legível a partir de erro do Supabase/Postgres
+// Segmentos atendidos e estilos de site (o estilo é escolhido pela equipe, não pelo dono)
+const SEGMENTOS = { barbearia: "Barbearia", salao: "Salão de beleza", unhas: "Unhas / esmalteria", cilios: "Sobrancelhas e cílios", outro: "Outra área" };
+const TEMAS_SITE = { urbano: "Urbano (escuro, marcante)", classico: "Clássico (claro, serifado)", elegante: "Elegante (salão)", doce: "Doce (unhas)", minimal: "Minimal (sobrancelhas e cílios)" };
+
 function msgErro(e) {
   const m = e?.message || String(e);
   if (/agendamento_sem_conflito/.test(m)) return "Já existe um agendamento nesse horário para esse profissional.";
@@ -105,8 +109,8 @@ function avisoNaoConfigurado() {
 function baixarIcs({ titulo, inicio, fim, local, descricao }) {
   const f = d => new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const linhas = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Navalha//Agenda//PT", "BEGIN:VEVENT",
-    `UID:${f(inicio)}-${Math.random().toString(36).slice(2)}@navalha`, `DTSTAMP:${f(new Date())}`,
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Marcai//Agenda//PT", "BEGIN:VEVENT",
+    `UID:${f(inicio)}-${Math.random().toString(36).slice(2)}@marcai`, `DTSTAMP:${f(new Date())}`,
     `DTSTART:${f(inicio)}`, `DTEND:${f(fim)}`, `SUMMARY:${titulo}`,
     local ? `LOCATION:${local}` : "", descricao ? `DESCRIPTION:${descricao.replace(/\n/g, "\\n")}` : "",
     "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:Lembrete", "END:VALARM",

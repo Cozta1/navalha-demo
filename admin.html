@@ -4,16 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Admin · Navalha</title>
+<title>Admin · Marcaí</title>
 <meta name="theme-color" content="#0e0d0c">
 <script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='4' y='9' width='32' height='27' rx='9' fill='%23e09a63'/%3E%3Crect x='11' y='4.5' width='3.6' height='9' rx='1.8' fill='%230e0d0c'/%3E%3Crect x='25.4' y='4.5' width='3.6' height='9' rx='1.8' fill='%230e0d0c'/%3E%3Cpath d='M12.5 23 18 28.2 28 17.6' fill='none' stroke='%231d130c' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/cliente.css">
 <style>
-  /* o admin usa o cobre do Navalha como cor de destaque */
+  /* o admin usa o cobre do Marcaí como cor de destaque */
   :root { --blue: #c8703f; --on-accent: #1e1009; }
   body.cliente .btn-blue { background: linear-gradient(135deg, #b5602f 0%, #e09a63 35%, #f3c39b 50%, #d27b45 65%, #b5602f 100%); background-size: 180% auto; }
   .topo-adm { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
@@ -23,9 +24,9 @@
   .logo-n small { font-family: var(--sans); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--blue-light); margin-left: 4px; }
   main.wrap { padding-top: 26px; padding-bottom: 70px; max-width: 1180px; }
   h2 { margin-bottom: 4px; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 6px 0 30px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 6px 0 30px; }
   .kpis .card { padding: 18px; }
-  .kpis b { display: block; font-family: var(--serif); font-weight: 600; font-size: 2rem; letter-spacing: -.02em; margin-top: 4px; white-space: nowrap; }
+  .kpis b { display: block; font-family: var(--serif); font-weight: 600; font-size: clamp(1.35rem, 2vw, 2rem); letter-spacing: -.02em; margin-top: 4px; overflow-wrap: anywhere; }
   .kpis .card.destaque { border: 1px solid transparent; background: linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #b5602f, #f3c39b, #b5602f) border-box; }
   .tabela { border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; background: var(--card); box-shadow: var(--sombra); }
   .tr { display: grid; grid-template-columns: 2fr 1.1fr .9fr 1fr .7fr .6fr auto; gap: 12px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); min-width: 900px; }
@@ -55,7 +56,7 @@
 <body class="cliente">
 <header class="topo-adm"><div class="wrap">
   <span class="logo-n"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5602f"/><stop offset=".45" stop-color="#f3c39b"/><stop offset="1" stop-color="#c8703f"/></linearGradient></defs>
-    <path d="M8 27 29 8c3-2.4 6.6 1.2 4.2 4.2L14 32z" fill="url(#lg)"/><path d="M14 32 7 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="14" cy="32" r="2.2" fill="currentColor"/></svg>navalha<small>admin</small></span>
+    <rect x="4" y="9" width="32" height="27" rx="9" fill="url(#lg)"/><rect x="11" y="4.5" width="3.6" height="9" rx="1.8" fill="currentColor"/><rect x="25.4" y="4.5" width="3.6" height="9" rx="1.8" fill="currentColor"/><path d="M12.5 23 18 28.2 28 17.6" fill="none" stroke="#1d130c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>marcaí<small>admin</small></span>
   <div class="row"><span id="tema"></span><button class="btn btn-ghost btn-sm hidden" id="sair">Sair</button></div>
 </div></header>
 <main class="wrap" id="app"><p class="carregando">Carregando…</p></main>

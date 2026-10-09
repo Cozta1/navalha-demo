@@ -15,7 +15,7 @@
   const linkAgendar = s => `agendar.html?b=${encodeURIComponent(s)}`;
   const cabecalho = (direita = "") => `<div class="topo-b" data-tema-aqui>
       <div class="marca-b">${barb?.logo_url ? `<img src="${esc(barb.logo_url)}" alt="">` : ""}
-        <div><p class="sub">${barb ? esc(barb.nome) : "Navalha"}</p><h1>Minha conta</h1></div></div><div class="row"><span class="tema-aqui"></span>${direita}</div></div>`;
+        <div><p class="sub">${barb ? esc(barb.nome) : "Marcaí"}</p><h1>Minha conta</h1></div></div><div class="row"><span class="tema-aqui"></span>${direita}</div></div>`;
   // depois de cada render, coloca o botão de tema no cabeçalho
   new MutationObserver(() => { const t = $(".tema-aqui"); if (t) t.replaceWith(botaoTema()); }).observe(document.body, { childList: true, subtree: true });
 

@@ -1,5 +1,5 @@
 /* =====================================================================
-   Navalha — painel do dono/barbeiro. Usa os tokens de cliente.css
+   Marcaí — painel do dono e da equipe. Usa os tokens de cliente.css
    (Fraunces + Hanken, claro/escuro). Destaque = cor da barbearia (--blue).
    Densidade automática: confortável no celular, compacta no computador.
    ===================================================================== */
@@ -12,6 +12,9 @@ body.painel.logado .topo-login { display: none; }
 .marca-n svg { width: 30px; height: 30px; }
 
 /* ---------- login / cadastro ---------- */
+.aceite { display: flex; gap: 10px; align-items: flex-start; margin: 4px 0 14px; color: var(--text); font-size: .9rem; line-height: 1.45; cursor: pointer; }
+.aceite input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.aceite a { text-decoration: underline; }
 .auth { max-width: 430px; margin: 60px auto; padding: 32px; }
 .auth h1 { text-align: center; margin-bottom: 6px; }
 
@@ -215,7 +218,7 @@ body.painel input[type=color] { width: 72px; height: 46px; padding: 4px; cursor:
 .resp { margin-top: 10px; }
 
 /* ---------- caixa ---------- */
-.item-cmd { display: grid; grid-template-columns: 1fr 64px 96px 28px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.item-cmd { display: grid; grid-template-columns: minmax(0, 1fr) 64px auto minmax(28px, auto); gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .item-cmd .qtd { padding: 7px; text-align: center; }
 .item-cmd > .mono { text-align: right; }
 .add-cmd { display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px; }
@@ -250,6 +253,9 @@ body.painel input[type=color] { width: 72px; height: 46px; padding: 4px; cursor:
 .graf-tip { position: absolute; top: 0; width: 170px; background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; font-size: .78rem; pointer-events: none; text-align: center; }
 
 /* ---------- marketing, meu site ---------- */
+.visual-info { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.visual-info .amostra { width: 44px; height: 44px; border-radius: 12px; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+.visual-info span.muted { display: block; }
 .mk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 860px) { .mk-grid { grid-template-columns: 1fr; } }
 .bloqueio-plano { border-color: color-mix(in srgb, var(--blue) 50%, var(--line)) !important; }
@@ -289,3 +295,27 @@ body.painel .card { padding: 20px; }
   .barra-dia input[type=date] { flex: 1; min-width: 0; }
   #conteudo > .row.space { gap: 10px; }
 }
+
+/* relatórios no celular: cada linha vira um bloco "rótulo: valor" (nada passa da largura) */
+@media (max-width: 640px) {
+  .rel-grid .tr.th { display: none; }
+  .rel-grid .tr:not(.th) { grid-template-columns: 1fr 1fr !important; row-gap: 4px; }
+  .rel-grid .tr:not(.th) > span:first-child { grid-column: 1 / -1; font-weight: 600; }
+  .rel-grid .tr:not(.th) > span:not(:first-child)::before { content: attr(data-r); display: block; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .rel-grid .tr:not(.th) > span:not(:first-child):last-child:nth-child(even) { grid-column: 1 / -1; }
+}
+
+/* números dos resumos: encolhem em vez de cortar com "…" */
+.resumo-dia b { text-overflow: clip; }
+@media (max-width: 420px) { .resumo-dia b { font-size: 1.15rem; white-space: normal; } }
+/* jornada: as faixas de horário quebram linha e nunca passam do card */
+.jornada .dia-j { grid-template-columns: 84px minmax(0, 1fr); }
+.faixas > * { max-width: 100%; }
+.faixa input { width: 88px; min-width: 0; }
+@media (max-width: 420px) { .jornada .dia-j { grid-template-columns: 1fr; gap: 4px; } }
+.item-cmd > span { white-space: nowrap; }
+
+/* linha do tempo: cabeçalho dentro da rolagem (gruda no topo e anda junto para o lado) */
+.tempo-cab { position: sticky; top: 0; z-index: 5; min-width: fit-content; }
+.tempo-cab .canto { position: sticky; left: 0; z-index: 1; background: var(--bg-alt); }
+@media (max-width: 640px) { .cab-prof, .col-prof { min-width: 140px; } }

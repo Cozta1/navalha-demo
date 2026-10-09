@@ -1,4 +1,4 @@
-// Site da barbearia montado a partir dos dados do sistema (mesmo visual do site da Os Barbeiros).
+// Site do estabelecimento montado a partir dos dados do sistema. Estilo (tema) e textos mudam conforme a área.
 // Endereço: site.html?b=<slug>  — ou um domínio próprio cadastrado no painel.
 (async () => {
   const raiz = $("#site");
@@ -10,10 +10,10 @@
     const { data } = await sb.rpc("barbearia_por_dominio", { p_host: location.hostname });
     slug = data;
   }
-  if (!slug) return falha("Barbearia não encontrada.");
+  if (!slug) return falha("Página não encontrada.");
 
   const { data: b, error } = await sb.from("barbearias").select("*").eq("slug", slug).maybeSingle();
-  if (error || !b) return falha("Barbearia não encontrada.");
+  if (error || !b) return falha("Página não encontrada.");
   const { data: temSite } = await sb.rpc("plano_tem", { p_barbearia: b.id, p_recurso: "site" });
   if (temSite === false) { location.replace(`agendar.html?b=${encodeURIComponent(b.slug)}`); return; }
   const [sv, pf, jo, pm, av, rs] = await Promise.all([
@@ -30,12 +30,32 @@
   const resumo = rs.data || { total: 0, profissionais: {} };
   const depoimentos = (av.data || []).filter(x => x.comentario && x.nota >= 4);
 
-  // ---------- tema ----------
-  if (b.tema === "classico") document.body.classList.add("classico");
+  // ---------- tema e textos da área ----------
+  const TEXTOS = {
+    barbearia: { rotulo: "Barbearia", titulo: "Corte\nna régua,\nsem fila.", precos: `Preço<br><span class="fino">na parede.</span>`, precosLead: "Sem surpresa no fim. Escolha o serviço, marque online e pague no salão.",
+      trabalhos: `Saiu da<br><span class="azul">cadeira.</span>`, equipe: `Quem<br><span class="fino">corta.</span>`, final: `Bora pra<br><span class="azul">cadeira?</span>`, icone: "✂" },
+    salao: { rotulo: "Salão de beleza", titulo: "Seu cabelo\ndo jeito\nque você ama.", precos: `Serviços<br><span class="fino">e valores.</span>`, precosLead: "Escolha o serviço, marque online e venha se cuidar. Sem fila, sem espera.",
+      trabalhos: `Antes, durante<br><span class="azul">e depois.</span>`, equipe: `Nossas<br><span class="fino">profissionais.</span>`, final: `Seu momento<br><span class="azul">de cuidar.</span>`, icone: "✦" },
+    unhas: { rotulo: "Esmalteria", titulo: "Unhas\nimpecáveis,\nsem espera.", precos: `Menu<br><span class="fino">de cores.</span>`, precosLead: "Escolha o serviço, a profissional e o horário. A cor do dia você escolhe aqui.",
+      trabalhos: `Feito<br><span class="azul">à mão.</span>`, equipe: `Quem<br><span class="fino">faz.</span>`, final: `Bora fazer<br><span class="azul">as unhas?</span>`, icone: "✿" },
+    cilios: { rotulo: "Sobrancelhas e cílios", titulo: "Olhar\nmarcante,\nnatural.", precos: `Procedimentos<br><span class="fino">e valores.</span>`, precosLead: "Valores claros e horário marcado. Você chega e já é atendida.",
+      trabalhos: `Resultados<br><span class="azul">reais.</span>`, equipe: `Nossas<br><span class="fino">especialistas.</span>`, final: `Realce<br><span class="azul">seu olhar.</span>`, icone: "·" },
+    outro: { rotulo: "Agende online", titulo: "Seu horário\nem poucos\ncliques.", precos: `Serviços<br><span class="fino">e valores.</span>`, precosLead: "Escolha o serviço, marque online e venha no seu horário.",
+      trabalhos: `Nosso<br><span class="azul">trabalho.</span>`, equipe: `Nossa<br><span class="fino">equipe.</span>`, final: `Vamos<br><span class="azul">agendar?</span>`, icone: "•" },
+  };
+  const tx = TEXTOS[b.segmento] || TEXTOS.barbearia;
+  const FONTES = {
+    elegante: "Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500",
+    doce: "DM+Serif+Display:ital@0;1&family=Nunito:wght@400;600;700",
+    minimal: "Italiana&family=Manrope:wght@300;400;600",
+  };
+  if (FONTES[b.tema]) document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${FONTES[b.tema]}&display=swap">`);
+  if (b.tema && b.tema !== "urbano") document.body.classList.add(b.tema);
   document.documentElement.style.setProperty("--azul", b.cor_destaque || "#2e6bff");
+  document.documentElement.style.setProperty("--icone", `"${tx.icone}"`);
   document.title = `${b.nome}${b.endereco ? " · " + b.endereco.split(",").slice(-2).join(",").trim() : ""}`;
   $('meta[name="description"]').content = (b.site_texto || `${b.nome}: agende seu horário online.`).slice(0, 160);
-  $('meta[name="theme-color"]').content = b.tema === "classico" ? "#f2ece0" : "#0b0b0c";
+  $('meta[name="theme-color"]').content = { classico: "#f2ece0", elegante: "#f7f0ec", doce: "#fff4f7", minimal: "#f3eee8" }[b.tema] || "#0b0b0c";
   if (b.logo_url) document.head.insertAdjacentHTML("beforeend", `<link rel="icon" href="${esc(b.logo_url)}">`);
 
   // ---------- dados derivados ----------
@@ -60,7 +80,7 @@
   const semana = [1, 2, 3, 4, 5].map(horarioDia);
   const resumoHorario = semana[0] && semana.every(h => h && h[0] === semana[0][0] && h[1] === semana[0][1])
     ? `${semana[0][0].replace(":00", "h")}–${semana[0][1].replace(":00", "h")}` : (hh ? `${hh[0]}–${hh[1]}` : "—");
-  const linhasTitulo = (b.site_titulo || "Corte\nna régua,\nsem fila.").split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 4);
+  const linhasTitulo = (b.site_titulo || tx.titulo).split(/\n/).map(x => x.trim()).filter(Boolean).slice(0, 4);
   const fotos = Array.isArray(b.fotos) ? b.fotos.filter(f => f?.url) : [];
   const capa = b.hero_url || fotos[0]?.url || null;
   const nota = resumo.total ? String(resumo.media).replace(".", ",") : null;
@@ -85,7 +105,7 @@
       <div class="letreiro" aria-hidden="true">${esc((b.endereco || b.nome).split(/[,–-]/).map(x => x.trim()).filter(Boolean).at(-2) || b.nome)}</div>
       <div class="wrap grade">
         <div style="padding-bottom:56px">
-          <div class="rotulo linha-entra" style="animation-delay:.05s">${esc(b.endereco ? b.endereco.split(",").slice(-2).join(" · ") : "Barbearia")}</div>
+          <div class="rotulo linha-entra" style="animation-delay:.05s">${esc(b.endereco ? b.endereco.split(",").slice(-2).join(" · ") : tx.rotulo)}</div>
           <h1 class="titulo" style="margin-top:18px">${linhasTitulo.map((l, i) =>
             `<span class="linha-entra ${i === linhasTitulo.length - 1 && i > 0 ? "azul" : i > 0 ? "fino" : ""}" style="animation-delay:${.15 + i * .12}s">${esc(l)}</span>`).join("")}</h1>
           <div class="assinatura rotulo linha-entra" style="animation-delay:.55s">${esc(b.nome)}</div>
@@ -101,8 +121,9 @@
           </div>
         </div>
         <div class="hero-foto linha-entra" style="animation-delay:.3s">
-          ${capa ? `<div class="foto"><img src="${esc(capa)}" alt=""></div>` : ""}
-          ${b.logo_url ? `<img class="selo" src="${esc(b.logo_url)}" alt="" ${capa ? "" : 'style="position:static;width:min(320px,70vw);margin:auto"'}>` : ""}
+          ${capa ? `<div class="foto"><img src="${esc(capa)}" alt=""></div>`
+            : `<div class="arte" aria-hidden="true"><i></i><i></i><i></i><span>${esc(iniciais(b.nome))}</span></div>`}
+          ${b.logo_url ? `<img class="selo" src="${esc(b.logo_url)}" alt="">` : ""}
         </div>
       </div>
     </section>
@@ -112,8 +133,8 @@
     <section id="precos" class="precos"><div class="wrap grade revela">
       <div>
         <div class="rotulo">Tabela</div>
-        <h2 class="titulo">Preço<br><span class="fino">na parede.</span></h2>
-        <p class="lead">Sem surpresa no fim. Escolha o serviço, marque online e pague no salão.</p>
+        <h2 class="titulo">${tx.precos}</h2>
+        <p class="lead">${tx.precosLead}</p>
         <div class="ctas"><a class="btn btn-claro" href="${agendar}">Ver horários livres <span class="seta">→</span></a></div>
       </div>
       <div class="cartaz">
@@ -124,13 +145,13 @@
     </div></section>` : ""}
 
     ${fotos.length ? `<section id="trabalhos"><div class="wrap revela">
-      <div class="cab"><div><div class="rotulo">Trabalhos &amp; espaço</div><h2 class="titulo">Saiu da<br><span class="azul">cadeira.</span></h2></div>
+      <div class="cab"><div><div class="rotulo">Trabalhos &amp; espaço</div><h2 class="titulo">${tx.trabalhos}</h2></div>
         ${insta ? `<a class="btn btn-vazado" href="${insta}" target="_blank" rel="noopener">@${esc(b.instagram)} <span class="seta">↗</span></a>` : ""}</div>
       <div class="mosaico">${fotos.map(f => `<figure><img src="${esc(f.url)}" alt="${esc(f.legenda || "")}" loading="lazy">${f.legenda ? `<figcaption>${esc(f.legenda)}</figcaption>` : ""}</figure>`).join("")}</div>
     </div></section>` : ""}
 
     ${profs.length > 1 ? `<section id="equipe"><div class="wrap revela">
-      <div class="rotulo">Equipe</div><h2 class="titulo">Quem<br><span class="fino">corta.</span></h2>
+      <div class="rotulo">Equipe</div><h2 class="titulo">${tx.equipe}</h2>
       <div class="equipe">${profs.map(p => { const n = resumo.profissionais?.[p.id]; return `<div><div class="av">${p.foto_url ? `<img src="${esc(p.foto_url)}" alt="">` : esc(iniciais(p.nome))}</div>
         <b>${esc(p.nome)}</b><small>${n ? `★ ${String(n.media).replace(".", ",")} · ${n.total} avaliações` : "&nbsp;"}</small></div>`; }).join("")}</div>
     </div></section>` : ""}
@@ -163,7 +184,7 @@
 
     <section class="final"><div class="wrap revela">
       <div class="rotulo">Horários livres em tempo real</div>
-      <h2 class="titulo" style="margin:18px 0 36px">Bora pra<br><span class="azul">cadeira?</span></h2>
+      <h2 class="titulo" style="margin:18px 0 36px">${tx.final}</h2>
       <div class="ctas"><a class="btn btn-azul" href="${agendar}">Agendar agora <span class="seta">→</span></a>
         ${whats ? `<a class="btn btn-vazado" href="${whats}" target="_blank" rel="noopener">Chamar no WhatsApp</a>` : ""}</div>
     </div></section>
@@ -171,7 +192,7 @@
 
   <footer><div class="wrap">
     <span>© ${new Date().getFullYear()} ${esc(b.nome)}</span>
-    <span>${insta ? `<a href="${insta}" target="_blank" rel="noopener">Instagram</a> · ` : ""}${whats ? `<a href="${whats}" target="_blank" rel="noopener">WhatsApp</a> · ` : ""}<a href="conta.html?b=${encodeURIComponent(b.slug)}">Minha conta</a> · <a href="./">Site e agenda por Navalha</a></span>
+    <span>${insta ? `<a href="${insta}" target="_blank" rel="noopener">Instagram</a> · ` : ""}${whats ? `<a href="${whats}" target="_blank" rel="noopener">WhatsApp</a> · ` : ""}<a href="conta.html?b=${encodeURIComponent(b.slug)}">Minha conta</a> · <a href="./">Site e agenda por Marcaí</a> · <a href="privacidade.html">Privacidade</a></span>
   </div></footer>
   <div class="barra-cel"><a class="ag" href="${agendar}">Agendar →</a>${whats ? `<a class="wa" href="${whats}" target="_blank" rel="noopener">WhatsApp</a>` : `<a class="wa" href="#local">Local</a>`}</div>`;
 

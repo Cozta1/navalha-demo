@@ -4,7 +4,7 @@
 // Usado só na demo publicada (scripts/gerar-demo.py troca o supabase-js por este arquivo).
 (() => {
   const CHAVE = "marcai_demo_db";
-  const VERSAO = 2; // muda quando os dados de exemplo mudam (recria a demo de quem já abriu)
+  const VERSAO = 4; // muda quando os dados de exemplo mudam (recria a demo de quem já abriu)
   const FUSO = "America/Sao_Paulo";
   const Q = new URLSearchParams(location.search);
 
@@ -109,7 +109,7 @@
   function padrao(t) {
     const agora = agoraIso();
     return ({
-      barbearias: { whatsapp: null, endereco: null, logo_url: null, site_url: null, cor_destaque: "#2e6bff", fuso: FUSO, intervalo_min: 30, antecedencia_min: 60, dias_abertos: 30,
+      barbearias: { segmento: "barbearia", whatsapp: null, endereco: null, logo_url: null, site_url: null, cor_destaque: "#2e6bff", fuso: FUSO, intervalo_min: 30, antecedencia_min: 60, dias_abertos: 30,
         cancelamento_horas: 2, max_futuros: 3, tema: "urbano", site_titulo: null, site_texto: null, instagram: null, maps_url: null, hero_url: null, fotos: [], dominio: null, criado_em: agora },
       membros: { papel: "dono", profissional_id: null },
       profissionais: { foto_url: null, ativo: true, ordem: 0, comissao_servico_pct: 40, comissao_produto_pct: 10 },
@@ -163,11 +163,11 @@
       if (p) i.comissao_pct = i.tipo === "servico" ? p.comissao_servico_pct : p.comissao_produto_pct;
     }
   }
-  function unico(t, linha) {
+  function unico(t, linha, propria = linha) {
     const regras = { clientes: [["barbearia_id", "telefone"]], cupons: [["barbearia_id", "codigo"]], barbearias: [["slug"], ["dominio"]], avaliacoes: [["agendamento_id"]] }[t] || [];
     for (const cols of regras) {
       if (cols.some(c => linha[c] == null)) continue;
-      if (T(t).some(x => x !== linha && cols.every(c => x[c] === linha[c]))) erro(`duplicate key value violates unique constraint "${t}_${cols.join("_")}_key"`);
+      if (T(t).some(x => x !== propria && cols.every(c => x[c] === linha[c]))) erro(`duplicate key value violates unique constraint "${t}_${cols.join("_")}_key"`);
     }
   }
 
@@ -203,10 +203,13 @@
       if (novo.resposta !== antes.resposta) novo.respondido_em = agoraIso();
     }
     if (t === "pedidos_ajuste") novo.atualizado_em = agoraIso();
+    if (t === "barbearias" && uid() && !isAdmin()
+        && ["tema", "cor_destaque", "site_titulo", "site_texto", "hero_url", "fotos", "dominio", "instagram", "maps_url", "segmento", "termos_versao", "termos_aceitos_em"].some(c => JSON.stringify(novo[c]) !== JSON.stringify(antes[c])))
+      erro('O visual e o conteúdo do site são feitos pela nossa equipe. Peça a mudança em "Meu site".');
     if (t === "comanda_itens") itemComanda(novo);
     if (t === "profissionais" && "ativo" in mudancas && novo.ativo && !antes.ativo) limiteProfissionais(novo);
     if (t === "agendamentos") conferirConflito(novo);
-    unico(t, novo);
+    unico(t, novo, linha);
     Object.assign(linha, novo);
     if (t === "agendamentos" && linha.cupom_id && antes.status !== linha.status) {
       const c = T("cupons").find(x => x.id === linha.cupom_id);
@@ -516,13 +519,15 @@
       return novo.id;
     },
 
-    criar_barbearia({ p_nome, p_slug, p_whatsapp, p_profissional }) {
+    criar_barbearia({ p_nome, p_slug, p_whatsapp, p_profissional, p_segmento = "barbearia" }) {
       if (!uid()) erro("Faça login primeiro.");
       if (T("membros").some(m => m.user_id === uid())) erro("Sua conta já tem um estabelecimento.");
       const slug = String(p_slug || "").trim().toLowerCase();
       if (!/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(slug)) erro("Endereço inválido: use letras minúsculas, números e hífen.");
       if (T("barbearias").some(b => b.slug === slug)) erro("Esse endereço já está em uso. Escolha outro.");
-      const b = inserir("barbearias", { nome: String(p_nome || "").trim(), slug, whatsapp: dig(p_whatsapp) || null });
+      const seg = p_segmento || "barbearia", visual = { salao: ["elegante", "#8e3b63"], unhas: ["doce", "#e0457b"], cilios: ["minimal", "#8a6a4f"] }[seg] || ["urbano", "#2e6bff"];
+      const b = inserir("barbearias", { nome: String(p_nome || "").trim(), slug, whatsapp: dig(p_whatsapp) || null, segmento: seg, tema: visual[0], cor_destaque: visual[1],
+        termos_versao: "1.0", termos_aceitos_em: agoraIso() });
       inserir("membros", { barbearia_id: b.id, user_id: uid(), papel: "dono" });
       inserir("assinaturas", { barbearia_id: b.id, status: "teste", teste_ate: somaDias(hojeEm(FUSO), 14) });
       const p = inserir("profissionais", { barbearia_id: b.id, nome: String(p_profissional || "").trim() || "Profissional" });
@@ -848,127 +853,199 @@
     const hoje = hojeEm(FUSO);
     const dia = n => somaDias(hoje, n);
     const em = (data, hora) => instante(data, hora, FUSO).toISOString();
+    const conta = email => { const u = { id: uuid(), email, senha: "demo123" }; db.usuarios.push(u); return u; };
 
-    // contas da demonstração
-    const usuarios = { dono: { id: uuid(), email: "dono@demo.com", senha: "demo123" }, barbeiro: { id: uuid(), email: "barbeiro@demo.com", senha: "demo123" },
-      admin: { id: uuid(), email: "admin@demo.com", senha: "demo123" } };
-    db.usuarios.push(...Object.values(usuarios));
-    inserir("plataforma_admins", { user_id: usuarios.admin.id });
+    inserir("plataforma_admins", { user_id: conta("admin@demo.com").id });
 
     // planos (mesmos do schema)
-    const planos = [
-      inserir("planos", { nome: "Básico", preco_mensal: 89, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0, recursos: [], ajustes_mes: 0, ordem: 1,
+    const planos = {
+      basico: inserir("planos", { nome: "Básico", preco_mensal: 89, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0, recursos: [], ajustes_mes: 0, ordem: 1,
         descricao: "Agenda online 24h, página de agendamento, conta do cliente, avaliações e caixa." }),
-      inserir("planos", { nome: "Profissional", preco_mensal: 249, profissionais_inclusos: 2, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails"], ajustes_mes: 2, ordem: 2,
+      profissional: inserir("planos", { nome: "Profissional", preco_mensal: 249, profissionais_inclusos: 2, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails"], ajustes_mes: 2, ordem: 2,
         descricao: "Tudo do Básico + site próprio com domínio, relatórios completos e comissões." }),
-      inserir("planos", { nome: "Premium", preco_mensal: 349, profissionais_inclusos: 4, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails", "marketing", "estoque"], ajustes_mes: 5, ordem: 3,
+      premium: inserir("planos", { nome: "Premium", preco_mensal: 349, profissionais_inclusos: 4, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails", "marketing", "estoque"], ajustes_mes: 5, ordem: 3,
         descricao: "Tudo do Profissional + promoções por horário, cupons, pacotes, marketing e estoque." }),
-    ];
-
-    // ---------- Os Barbeiros JF ----------
-    const b = inserir("barbearias", { slug: "os-barbeiros-jf", nome: "Os Barbeiros JF", whatsapp: "32991234073", endereco: "R. Diogo Álvares, 389 – Benfica, Juiz de Fora",
-      logo_url: "logo.jpg", site_url: null, cor_destaque: "#2e6bff", tema: "urbano", site_titulo: "Corte\nna régua,\nsem fila.",
-      site_texto: "Barbearia tradicional com estilo moderno. Escolha o serviço e o melhor horário pra você em poucos cliques.", instagram: "gabrielpires_barber01", hero_url: "cadeira.jpg",
-      fotos: [{ url: "corte1.jpg", legenda: "Barba" }, { url: "salao2.jpg", legenda: "O salão" }, { url: "corte3.jpg", legenda: "Corte + barba" }, { url: "atendimento.jpg", legenda: "Na cadeira" },
-        { url: "corte2.jpg", legenda: "Disfarçado" }, { url: "fachada.jpg", legenda: "Fachada" }], criado_em: em(dia(-120), "10:00") });
-    inserir("assinaturas", { barbearia_id: b.id, plano_id: planos[2].id, status: "ativa", vencimento: dia(22), fidelidade_ate: dia(245) });
-    inserir("pagamentos_assinatura", { barbearia_id: b.id, valor: 349, referencia: dia(-8).slice(0, 7), forma: "pix", pago_em: dia(-8) });
-    const prof = inserir("profissionais", { barbearia_id: b.id, nome: "Gabriel Pires", ordem: 0 });
-    inserir("membros", { barbearia_id: b.id, user_id: usuarios.dono.id, papel: "dono" });
-    inserir("membros", { barbearia_id: b.id, user_id: usuarios.barbeiro.id, papel: "barbeiro", profissional_id: prof.id });
-    for (let d = 1; d <= 5; d++) inserir("jornadas", { barbearia_id: b.id, profissional_id: prof.id, dia_semana: d, inicio: "08:00:00", fim: "20:00:00" });
-    inserir("jornadas", { barbearia_id: b.id, profissional_id: prof.id, dia_semana: 6, inicio: "08:00:00", fim: "16:00:00" });
-    const S = {};
-    [["maquina", "Máquina geral", "Corte todo na máquina", 25, 30], ["disfarcado", "Disfarçado", "Degradê na régua", 35, 40], ["tesoura", "Tesoura", "Corte na tesoura", 35, 40],
-     ["barba", "Barba", "Desenhada e alinhada", 25, 30], ["sobrancelha", "Sobrancelha", null, 10, 10], ["pigmentacao", "Pigmentação", "Barba ou cabelo", 30, 30]]
-      .forEach(([k, nome, descricao, preco, duracao_min], ordem) => { S[k] = inserir("servicos", { barbearia_id: b.id, nome, descricao, preco, duracao_min, ordem }); });
-
-    const produtos = [inserir("produtos", { barbearia_id: b.id, nome: "Pomada matte", preco_venda: 45, custo: 18, estoque_minimo: 3 }),
-      inserir("produtos", { barbearia_id: b.id, nome: "Óleo para barba", preco_venda: 38, custo: 15, estoque_minimo: 3 }),
-      inserir("produtos", { barbearia_id: b.id, nome: "Shampoo para barba", preco_venda: 32, custo: 12, estoque_minimo: 2 })];
-    [[0, 40], [1, 20], [2, 18]].forEach(([i, q]) => inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: produtos[i].id, tipo: "entrada", quantidade: q, custo_unit: produtos[i].custo, observacao: "Estoque inicial", criado_em: em(dia(-60), "09:00") }));
-
-    inserir("promocoes", { barbearia_id: b.id, nome: "Manhã do corte", desconto_pct: 20, dias_semana: [2, 3], hora_inicio: "09:00:00", hora_fim: "12:00:00", servico_ids: [S.disfarcado.id] });
-    inserir("cupons", { barbearia_id: b.id, codigo: "VOLTA10", tipo: "pct", valor: 10, usos_max: 50 });
-    inserir("cupons", { barbearia_id: b.id, codigo: "NATAL", tipo: "valor", valor: 15, ativo: false, validade_ate: `${hoje.slice(0, 4)}-12-26` });
-    const pacote = inserir("pacotes", { barbearia_id: b.id, nome: "Clube do corte — 4 por mês", servico_id: S.disfarcado.id, quantidade: 4, preco: 120, validade_dias: 30 });
-
-    const nomes = ["João Silva", "Carlos Souza", "Pedro Lima", "Marcos Vale", "Tiago Melo", "Léo Dias", "Bruno Reis", "Rafael Costa", "André Gomes", "Lucas Martins", "Felipe Rocha", "Gustavo Alves",
-      "Diego Moreira", "Mateus Ribeiro", "Vinícius Cardoso", "Rodrigo Barbosa", "Thiago Pinto", "Eduardo Teixeira", "Henrique Lopes", "Caio Fernandes", "Daniel Araújo", "Igor Nunes",
-      "Samuel Freitas", "Paulo Mendes", "Renan Castro", "Otávio Ramos", "Murilo Duarte", "Fábio Correia"];
-    const clientes = nomes.map((nome, i) => inserir("clientes", { barbearia_id: b.id, nome, telefone: `3299${String(1000000 + i * 37171).slice(0, 7)}`,
-      email: i % 4 === 0 ? `${nome.split(" ")[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")}@email.com` : null,
-      nascimento: i % 5 === 0 ? `19${85 + (i % 14)}-${dia(i === 0 ? 0 : i % 3 === 0 ? 2 : 40 + i).slice(5)}` : null,
-      observacoes: i === 0 ? "Máquina 1 dos lados, gosta de café sem açúcar." : null, criado_em: em(dia(-100 + i * 3), "10:00") }));
-
-    const combos = [[S.disfarcado], [S.disfarcado, S.barba], [S.maquina], [S.barba], [S.tesoura], [S.disfarcado, S.sobrancelha], [S.maquina, S.barba], [S.pigmentacao], [S.sobrancelha]];
+    };
     const formas = ["pix", "pix", "pix", "dinheiro", "credito", "debito"];
-    // agenda de um dia: encaixa visitas sem sobrepor, dentro da jornada
-    function diaDeAgenda(data, quantos, statusDe, pool = clientes) {
-      const jor = T("jornadas").find(j => j.profissional_id === prof.id && j.dia_semana === dow(data));
-      if (!jor) return;
-      let t = minT(jor.inicio) + (rnd() < .5 ? 0 : 30);
-      const fimJ = minT(jor.fim);
-      for (let n = 0; n < quantos && t < fimJ - 30; n++) {
-        const servs = sorteia(combos), dur = servs.reduce((x, s) => x + s.duracao_min, 0);
-        if (t + dur > fimJ) break;
-        if (t < 13 * 60 && t + dur > 12 * 60) t = 13 * 60; // almoço
-        if (t + dur > fimJ) break;
-        const hh = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
-        criarVisita(data, hh, servs, sorteia(pool), statusDe(hh));
-        t += dur + sorteia([0, 0, 20, 30, 50, 60]);
-        t = Math.ceil(t / 10) * 10;
+    const telefone = (base, i) => `${base}${String(1000000 + i * 37171).slice(0, 7)}`;
+    const semAcento = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+    // Um negócio de exemplo completo: cadastro, equipe, histórico, caixa, avaliações e marketing
+    function negocio(c) {
+      const b = inserir("barbearias", { slug: c.slug, nome: c.nome, segmento: c.segmento, whatsapp: c.whatsapp, endereco: c.endereco, logo_url: c.logo || null, site_url: null,
+        cor_destaque: c.cor, tema: c.tema, site_titulo: c.titulo, site_texto: c.texto, instagram: c.instagram || null, hero_url: c.hero || null, fotos: c.fotos || [],
+        criado_em: em(dia(-c.historico - 40), "10:00") });
+      const pl = planos[c.plano];
+      inserir("assinaturas", { barbearia_id: b.id, plano_id: pl.id, status: "ativa", vencimento: dia(22), fidelidade_ate: pl.fidelidade_meses ? dia(245) : null });
+      inserir("pagamentos_assinatura", { barbearia_id: b.id, valor: pl.preco_mensal, referencia: dia(-8).slice(0, 7), forma: "pix", pago_em: dia(-8) });
+      inserir("membros", { barbearia_id: b.id, user_id: conta(c.email).id, papel: "dono" });
+      const profs = c.profs.map((nome, ordem) => inserir("profissionais", { barbearia_id: b.id, nome, ordem }));
+      if (c.funcionario) inserir("membros", { barbearia_id: b.id, user_id: conta(c.funcionario).id, papel: "barbeiro", profissional_id: profs[0].id });
+      for (const p of profs) {
+        for (let d = 1; d <= 5; d++) inserir("jornadas", { barbearia_id: b.id, profissional_id: p.id, dia_semana: d, inicio: c.jornada[0] + ":00", fim: c.jornada[1] + ":00" });
+        inserir("jornadas", { barbearia_id: b.id, profissional_id: p.id, dia_semana: 6, inicio: c.sabado[0] + ":00", fim: c.sabado[1] + ":00" });
       }
-    }
-    function criarVisita(data, hora, servs, cl, status, extra = {}) {
-      const ini = Date.parse(em(data, hora)), dur = servs.reduce((x, s) => x + s.duracao_min, 0);
-      const a = inserir("agendamentos", { barbearia_id: b.id, profissional_id: prof.id, cliente_id: cl.id, servico_nome: servs.map(s => s.nome).join(" + "),
-        preco: servs.reduce((x, s) => x + s.preco, 0), cliente_nome: cl.nome, cliente_telefone: cl.telefone, inicio: new Date(ini).toISOString(),
-        fim: new Date(ini + dur * 60000).toISOString(), status, origem: rnd() < .72 ? "online" : "painel", criado_em: new Date(ini - (1 + Math.floor(rnd() * 5)) * 86400000).toISOString(),
-        cancelado_por: status === "cancelado" ? (rnd() < .7 ? "cliente" : "barbearia") : null, ...extra });
-      servs.forEach((s, k) => inserir("agendamento_itens", { agendamento_id: a.id, servico_id: s.id, nome: s.nome, preco: s.preco, duracao_min: s.duracao_min, ordem: k + 1 }));
-      if (status === "concluido") {
-        const c = inserir("comandas", { barbearia_id: b.id, agendamento_id: a.id, cliente_id: cl.id, cliente_nome: cl.nome, profissional_id: prof.id, aberta_em: a.inicio });
-        servs.forEach(s => inserir("comanda_itens", { comanda_id: c.id, tipo: "servico", servico_id: s.id, profissional_id: prof.id, descricao: s.nome, quantidade: 1, preco_unit: s.preco }));
-        if (rnd() < .18) { const p = sorteia(produtos); if (p.estoque > 4) inserir("comanda_itens", { comanda_id: c.id, tipo: "produto", produto_id: p.id, profissional_id: prof.id, descricao: p.nome, quantidade: 1, preco_unit: p.preco_venda }); }
-        const itens = T("comanda_itens").filter(i => i.comanda_id === c.id), sub = r2(itens.reduce((x, i) => x + i.total, 0));
+      const S = {};
+      c.servicos.forEach(([k, nome, descricao, preco, duracao_min], ordem) => { S[k] = inserir("servicos", { barbearia_id: b.id, nome, descricao, preco, duracao_min, ordem }); });
+      const combos = c.combos.map(ks => ks.map(k => S[k]));
+      const produtos = (c.produtos || []).map(([nome, preco_venda, custo, estoque_minimo, entrada]) => {
+        const p = inserir("produtos", { barbearia_id: b.id, nome, preco_venda, custo, estoque_minimo });
+        inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: p.id, tipo: "entrada", quantidade: entrada, custo_unit: custo, observacao: "Estoque inicial", criado_em: em(dia(-c.historico), "09:00") });
+        return p;
+      });
+      if (c.promo) inserir("promocoes", { barbearia_id: b.id, nome: c.promo.nome, desconto_pct: c.promo.pct, dias_semana: c.promo.dias, hora_inicio: c.promo.de + ":00", hora_fim: c.promo.ate + ":00", servico_ids: [S[c.promo.servico].id] });
+      if (c.cupom) inserir("cupons", { barbearia_id: b.id, codigo: c.cupom, tipo: "pct", valor: 10, usos_max: 50 });
+      const pacote = c.pacote && inserir("pacotes", { barbearia_id: b.id, nome: c.pacote.nome, servico_id: S[c.pacote.servico].id, quantidade: c.pacote.qtd, preco: c.pacote.preco, validade_dias: 30 });
+
+      const clientes = c.clientes.map((nome, i) => inserir("clientes", { barbearia_id: b.id, nome, telefone: telefone(c.ddd, i),
+        email: i % 4 === 0 ? `${semAcento(nome.split(" ")[0])}@email.com` : null,
+        nascimento: i % 5 === 0 ? `19${85 + (i % 14)}-${dia(i === 0 ? 0 : i % 3 === 0 ? 2 : 40 + i).slice(5)}` : null,
+        observacoes: i === 0 ? c.obsCliente : null, criado_em: em(dia(-c.historico - 20 + i * 2), "10:00") }));
+      const recentes = clientes.slice(0, clientes.length - 6); // os 6 últimos param de vir: viram "sumidos"
+
+      function criarVisita(prof, data, hora, servs, cl, status) {
+        const ini = Date.parse(em(data, hora)), dur = servs.reduce((x, s) => x + s.duracao_min, 0);
+        const a = inserir("agendamentos", { barbearia_id: b.id, profissional_id: prof.id, cliente_id: cl.id, servico_nome: servs.map(s => s.nome).join(" + "),
+          preco: servs.reduce((x, s) => x + s.preco, 0), cliente_nome: cl.nome, cliente_telefone: cl.telefone, inicio: new Date(ini).toISOString(),
+          fim: new Date(ini + dur * 60000).toISOString(), status, origem: rnd() < .72 ? "online" : "painel", criado_em: new Date(ini - (1 + Math.floor(rnd() * 5)) * 86400000).toISOString(),
+          cancelado_por: status === "cancelado" ? (rnd() < .7 ? "cliente" : "barbearia") : null });
+        servs.forEach((s, k) => inserir("agendamento_itens", { agendamento_id: a.id, servico_id: s.id, nome: s.nome, preco: s.preco, duracao_min: s.duracao_min, ordem: k + 1 }));
+        if (status !== "concluido") return a;
+        const cmd = inserir("comandas", { barbearia_id: b.id, agendamento_id: a.id, cliente_id: cl.id, cliente_nome: cl.nome, profissional_id: prof.id, aberta_em: a.inicio });
+        servs.forEach(s => inserir("comanda_itens", { comanda_id: cmd.id, tipo: "servico", servico_id: s.id, profissional_id: prof.id, descricao: s.nome, quantidade: 1, preco_unit: s.preco }));
+        if (produtos.length && rnd() < .18) { const p = sorteia(produtos); if (p.estoque > 4) inserir("comanda_itens", { comanda_id: cmd.id, tipo: "produto", produto_id: p.id, profissional_id: prof.id, descricao: p.nome, quantidade: 1, preco_unit: p.preco_venda }); }
+        const itens = T("comanda_itens").filter(i => i.comanda_id === cmd.id), sub = r2(itens.reduce((x, i) => x + i.total, 0));
         const desc = rnd() < .08 ? 5 : 0, tot = sub - desc;
         itens.forEach(i => { i.comissao_valor = r2(i.total * (tot / sub) * i.comissao_pct / 100); });
-        if (rnd() < .12 && tot > 40) { inserir("comanda_pagamentos", { comanda_id: c.id, forma: "pix", valor: 30, criado_em: a.fim }); inserir("comanda_pagamentos", { comanda_id: c.id, forma: "dinheiro", valor: tot - 30, criado_em: a.fim }); }
-        else inserir("comanda_pagamentos", { comanda_id: c.id, forma: sorteia(formas), valor: tot, criado_em: a.fim });
-        itens.filter(i => i.tipo === "produto").forEach(i => inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: i.produto_id, tipo: "venda", quantidade: -1, comanda_id: c.id, observacao: "Venda", criado_em: a.fim }));
-        Object.assign(c, { status: "fechada", subtotal: sub, desconto: desc, total: tot, fechada_em: new Date(Date.parse(a.fim) + 2 * 60000).toISOString() });
+        if (rnd() < .12 && tot > 40) { inserir("comanda_pagamentos", { comanda_id: cmd.id, forma: "pix", valor: 30, criado_em: a.fim }); inserir("comanda_pagamentos", { comanda_id: cmd.id, forma: "dinheiro", valor: tot - 30, criado_em: a.fim }); }
+        else inserir("comanda_pagamentos", { comanda_id: cmd.id, forma: sorteia(formas), valor: tot, criado_em: a.fim });
+        itens.filter(i => i.tipo === "produto").forEach(i => inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: i.produto_id, tipo: "venda", quantidade: -1, comanda_id: cmd.id, observacao: "Venda", criado_em: a.fim }));
+        Object.assign(cmd, { status: "fechada", subtotal: sub, desconto: desc, total: tot, fechada_em: new Date(Date.parse(a.fim) + 2 * 60000).toISOString() });
+        return a;
       }
-      return a;
+      // agenda de um dia de um profissional: encaixa visitas sem sobrepor, dentro da jornada e fora do almoço
+      function diaDeAgenda(prof, data, quantos, statusDe, pool) {
+        const jor = T("jornadas").find(j => j.profissional_id === prof.id && j.dia_semana === dow(data));
+        if (!jor) return;
+        let t = minT(jor.inicio) + (rnd() < .5 ? 0 : 30);
+        const fimJ = minT(jor.fim);
+        for (let n = 0; n < quantos && t < fimJ - 30; n++) {
+          const servs = sorteia(combos), dur = servs.reduce((x, s) => x + s.duracao_min, 0);
+          if (t < 13 * 60 && t + dur > 12 * 60) t = 13 * 60;
+          if (t + dur > fimJ) break;
+          const hh = `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+          criarVisita(prof, data, hh, servs, sorteia(pool), statusDe(hh));
+          t = Math.ceil((t + dur + sorteia([0, 0, 20, 30, 50, 60])) / 10) * 10;
+        }
+      }
+      const passado = () => { const r = rnd(); return r < .84 ? "concluido" : r < .9 ? "faltou" : "cancelado"; };
+      const agoraMin = minutosLocal(Date.now(), FUSO);
+      profs.forEach((prof, k) => {
+        const carga = Math.max(2, c.carga - k * 2);
+        for (let n = -c.historico; n <= -1; n++) diaDeAgenda(prof, dia(n), carga - (n < -45 ? 2 : 0) + Math.floor(rnd() * 4), passado, n < -50 ? clientes : recentes);
+        diaDeAgenda(prof, hoje, carga + 2, hh => (minT(hh) + 40 < agoraMin ? (rnd() < .9 ? "concluido" : "faltou") : "confirmado"), recentes);
+        for (let n = 1; n <= 12; n++) diaDeAgenda(prof, dia(n), Math.max(1, carga + 1 - Math.floor(n / 2) - Math.floor(rnd() * 3)), () => "confirmado", recentes);
+        inserir("bloqueios", { barbearia_id: b.id, profissional_id: prof.id, inicio: em(hoje, "12:00"), fim: em(hoje, "13:00"), motivo: "Almoço" });
+      });
+      // histórico curto: os últimos clientes ganham uma visita antiga para aparecerem como "sumidos"
+      if (c.historico < 50) clientes.slice(-6).forEach((cl, i) => criarVisita(profs[0], dia(-52 - i * 3), "10:00", combos[0], cl, "concluido"));
+      if (pacote) inserir("pacotes_clientes", { barbearia_id: b.id, pacote_id: pacote.id, cliente_id: clientes[2].id, nome: pacote.nome, servico_id: pacote.servico_id, quantidade: pacote.quantidade, usados: 1,
+        valor_sessao: r2(pacote.preco / pacote.quantidade), valido_ate: dia(20) });
+      const espera = S[c.servicos[0][0]];
+      inserir("lista_espera", { barbearia_id: b.id, cliente_id: clientes[8].id, nome: clientes[8].nome, telefone: clientes[8].telefone, servico_id: espera.id, servico_nome: espera.nome, data: hoje, periodo: "tarde" });
+
+      // avaliações dos atendimentos concluídos
+      T("agendamentos").filter(a => a.barbearia_id === b.id && a.status === "concluido").slice(-26).forEach((a, i) => {
+        const nota = i === 5 ? 3 : i === 11 ? 4 : rnd() < .85 ? 5 : 4, ns = a.cliente_nome.split(" ");
+        inserir("avaliacoes", { barbearia_id: b.id, agendamento_id: a.id, profissional_id: a.profissional_id, nota, comentario: c.depoimentos[i % c.depoimentos.length], nome_exibicao: `${ns[0]} ${ns[1][0]}.`,
+          servico_nome: a.servico_nome, resposta: i % 6 === 0 ? c.resposta : null, publicada: nota >= 4, criado_em: new Date(Date.parse(a.fim) + 3 * 3600000).toISOString() });
+      });
+      // um produto acabando, para o aviso aparecer no Início
+      const acabando = produtos[1];
+      if (acabando && acabando.estoque !== 2) inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: acabando.id, tipo: "ajuste", quantidade: 2 - acabando.estoque, observacao: "Contagem", criado_em: em(dia(-1), "19:00") });
+      if (c.ajuste) inserir("pedidos_ajuste", { barbearia_id: b.id, titulo: c.ajuste, descricao: "Mandei a foto nova pelo WhatsApp.", status: "feito", resposta: "Pronto! Já está no ar.", criado_em: em(dia(-3), "10:00") });
+      return b;
     }
 
-    // últimos 75 dias (os 6 últimos clientes pararam de vir há uns 50 dias: viram "sumidos" no marketing)
-    const recentes = clientes.slice(0, 22);
-    for (let n = -75; n <= -1; n++) diaDeAgenda(dia(n), (n < -45 ? 3 : 5) + Math.floor(rnd() * 5), () => { const r = rnd(); return r < .84 ? "concluido" : r < .9 ? "faltou" : "cancelado"; }, n < -50 ? clientes : recentes);
-    // hoje: manhã já atendida, tarde marcada
-    const agoraMin = minutosLocal(Date.now(), FUSO);
-    if (T("jornadas").some(j => j.profissional_id === prof.id && j.dia_semana === dow(hoje)))
-      diaDeAgenda(hoje, 9, hh => (minT(hh) + 40 < agoraMin ? (rnd() < .9 ? "concluido" : "faltou") : "confirmado"), recentes);
-    // próximos dias
-    for (let n = 1; n <= 12; n++) diaDeAgenda(dia(n), Math.max(1, 7 - Math.floor(n / 2) - Math.floor(rnd() * 3)), () => "confirmado", recentes);
-    inserir("bloqueios", { barbearia_id: b.id, profissional_id: prof.id, inicio: em(hoje, "12:00"), fim: em(hoje, "13:00"), motivo: "Almoço" });
-    // pacote vendido para um cliente fiel
-    inserir("pacotes_clientes", { barbearia_id: b.id, pacote_id: pacote.id, cliente_id: clientes[2].id, nome: pacote.nome, servico_id: S.disfarcado.id, quantidade: 4, usados: 1, valor_sessao: 30, valido_ate: dia(20) });
-    inserir("lista_espera", { barbearia_id: b.id, cliente_id: clientes[12].id, nome: clientes[12].nome, telefone: clientes[12].telefone, servico_id: S.disfarcado.id, servico_nome: "Disfarçado", data: hoje, periodo: "tarde" });
-
-    // avaliações dos atendimentos concluídos
-    const textos = ["Saí na régua. Atendimento top e café fresco!", "Melhor disfarçado da região.", "Pontual e caprichoso, recomendo.", null, "Ambiente massa e preço justo.", null,
-      "Barba ficou perfeita.", "Atendimento nota 10.", null, "Sempre volto, nunca decepciona.", "Rápido e bem feito.", null];
-    T("agendamentos").filter(a => a.status === "concluido").slice(-26).forEach((a, i) => {
-      const nota = i === 5 ? 3 : i === 11 ? 4 : rnd() < .85 ? 5 : 4, ns = a.cliente_nome.split(" ");
-      inserir("avaliacoes", { barbearia_id: b.id, agendamento_id: a.id, profissional_id: prof.id, nota, comentario: textos[i % textos.length], nome_exibicao: `${ns[0]} ${ns[1][0]}.`,
-        servico_nome: a.servico_nome, resposta: i % 6 === 0 ? "Valeu demais! Volte sempre. ✂️" : null, publicada: nota >= 4, criado_em: new Date(Date.parse(a.fim) + 3 * 3600000).toISOString() });
+    negocio({
+      email: "dono@demo.com", funcionario: "barbeiro@demo.com", slug: "os-barbeiros-jf", nome: "Os Barbeiros JF", segmento: "barbearia", tema: "urbano", cor: "#2e6bff", plano: "premium",
+      whatsapp: "32991234073", ddd: "3299", endereco: "R. Diogo Álvares, 389 – Benfica, Juiz de Fora", logo: "logo.jpg", hero: "cadeira.jpg", instagram: "gabrielpires_barber01",
+      titulo: "Corte\nna régua,\nsem fila.", texto: "Barbearia tradicional com estilo moderno. Escolha o serviço e o melhor horário pra você em poucos cliques.",
+      fotos: [{ url: "corte1.jpg", legenda: "Barba" }, { url: "salao2.jpg", legenda: "O salão" }, { url: "corte3.jpg", legenda: "Corte + barba" }, { url: "atendimento.jpg", legenda: "Na cadeira" },
+        { url: "corte2.jpg", legenda: "Disfarçado" }, { url: "fachada.jpg", legenda: "Fachada" }],
+      profs: ["Gabriel Pires"], jornada: ["08:00", "20:00"], sabado: ["08:00", "16:00"], historico: 60, carga: 6,
+      servicos: [["maquina", "Máquina geral", "Corte todo na máquina", 25, 30], ["disfarcado", "Disfarçado", "Degradê na régua", 35, 40], ["tesoura", "Tesoura", "Corte na tesoura", 35, 40],
+        ["barba", "Barba", "Desenhada e alinhada", 25, 30], ["sobrancelha", "Sobrancelha", null, 10, 10], ["pigmentacao", "Pigmentação", "Barba ou cabelo", 30, 30]],
+      combos: [["disfarcado"], ["disfarcado", "barba"], ["maquina"], ["barba"], ["tesoura"], ["disfarcado", "sobrancelha"], ["maquina", "barba"], ["pigmentacao"], ["sobrancelha"]],
+      produtos: [["Pomada matte", 45, 18, 3, 40], ["Óleo para barba", 38, 15, 3, 20], ["Shampoo para barba", 32, 12, 2, 18]],
+      promo: { nome: "Manhã do corte", pct: 20, dias: [2, 3], de: "09:00", ate: "12:00", servico: "disfarcado" }, cupom: "VOLTA10",
+      pacote: { nome: "Clube do corte — 4 por mês", servico: "disfarcado", qtd: 4, preco: 120 }, ajuste: "Trocar foto da capa",
+      obsCliente: "Máquina 1 dos lados, gosta de café sem açúcar.",
+      clientes: ["João Silva", "Carlos Souza", "Pedro Lima", "Marcos Vale", "Tiago Melo", "Léo Dias", "Bruno Reis", "Rafael Costa", "André Gomes", "Lucas Martins", "Felipe Rocha", "Gustavo Alves",
+        "Diego Moreira", "Mateus Ribeiro", "Vinícius Cardoso", "Rodrigo Barbosa", "Thiago Pinto", "Eduardo Teixeira", "Henrique Lopes", "Caio Fernandes", "Daniel Araújo", "Igor Nunes",
+        "Samuel Freitas", "Paulo Mendes", "Renan Castro", "Otávio Ramos", "Murilo Duarte", "Fábio Correia"],
+      depoimentos: ["Saí na régua. Atendimento top e café fresco!", "Melhor disfarçado da região.", "Pontual e caprichoso, recomendo.", null, "Ambiente massa e preço justo.", null,
+        "Barba ficou perfeita.", "Atendimento nota 10.", null, "Sempre volto, nunca decepciona.", "Rápido e bem feito.", null],
+      resposta: "Valeu demais! Volte sempre. ✂️",
     });
-    // um produto acabando, para o aviso aparecer no Início
-    const oleo = produtos[1];
-    if (oleo.estoque !== 2) inserir("movimentos_estoque", { barbearia_id: b.id, produto_id: oleo.id, tipo: "ajuste", quantidade: 2 - oleo.estoque, observacao: "Contagem", criado_em: em(dia(-1), "19:00") });
-    inserir("pedidos_ajuste", { barbearia_id: b.id, titulo: "Trocar foto da capa", descricao: "Usar a foto nova da fachada que mandei no WhatsApp.", status: "feito", resposta: "Pronto! Já está no ar.",
-      criado_em: em(dia(-3), "10:00") });
+
+    negocio({
+      email: "salao@demo.com", slug: "studio-bella-donna", nome: "Studio Bella Donna", segmento: "salao", tema: "elegante", cor: "#8e3b63", plano: "premium",
+      whatsapp: "31991230001", ddd: "3198", endereco: "Rua Pernambuco, 1200 – Savassi, Belo Horizonte", instagram: "studiobelladonna",
+      titulo: "Seu cabelo\ndo jeito\nque você ama.", texto: "Corte, cor e tratamento com quem entende de cabelo. Escolha o serviço e a profissional e agende em um minuto.",
+      profs: ["Camila Rocha", "Juliana Prado", "Renata Alves"], jornada: ["09:00", "19:00"], sabado: ["08:00", "17:00"], historico: 30, carga: 5,
+      servicos: [["corte", "Corte feminino", "Lavagem e finalização inclusas", 90, 60], ["escova", "Escova modelada", null, 60, 45], ["coloracao", "Coloração", "Raiz ou global", 180, 120],
+        ["mechas", "Mechas / luzes", "Técnica conforme avaliação", 350, 180], ["hidratacao", "Hidratação profunda", null, 80, 45], ["progressiva", "Progressiva", "Sem formol", 280, 150]],
+      combos: [["corte"], ["corte", "escova"], ["escova"], ["coloracao"], ["hidratacao", "escova"], ["mechas"], ["progressiva"], ["corte", "hidratacao"]],
+      produtos: [["Máscara de reconstrução", 89, 38, 3, 20], ["Óleo finalizador", 65, 27, 3, 14], ["Shampoo matizador", 72, 30, 2, 16]],
+      promo: { nome: "Terça do cuidado", pct: 15, dias: [2], de: "09:00", ate: "13:00", servico: "hidratacao" }, cupom: "BELLA10",
+      pacote: { nome: "Escova toda semana — 4x", servico: "escova", qtd: 4, preco: 200 }, ajuste: "Trocar a foto da capa",
+      obsCliente: "Cabelo cacheado, prefere finalização sem escova.",
+      clientes: ["Ana Beatriz Costa", "Mariana Lopes", "Fernanda Dias", "Patrícia Gomes", "Larissa Melo", "Gabriela Nunes", "Aline Ribeiro", "Bruna Teixeira", "Carolina Santos", "Débora Freitas",
+        "Elisa Martins", "Flávia Araújo", "Helena Barros", "Isabela Moura", "Jéssica Pires", "Karina Lima", "Letícia Souza", "Mônica Reis", "Natália Campos", "Olívia Ramos",
+        "Paula Andrade", "Raquel Fonseca", "Sabrina Duarte", "Tatiane Moraes", "Vanessa Castro", "Yasmin Rocha"],
+      depoimentos: ["Saí outra pessoa! A Camila é maravilhosa.", "Cor perfeita, exatamente como eu queria.", "Ambiente lindo e atendimento impecável.", null, "Melhor escova da cidade.", null,
+        "Hidratação deixou meu cabelo outro.", "Pontuais e muito atenciosas.", null, "Já indiquei para todas as amigas.", null],
+      resposta: "Obrigada, foi um prazer te receber! 💜",
+    });
+
+    negocio({
+      email: "unhas@demo.com", slug: "esmalteria-lua", nome: "Esmalteria Lua", segmento: "unhas", tema: "doce", cor: "#e0457b", plano: "premium",
+      whatsapp: "21991230002", ddd: "2198", endereco: "Rua Voluntários da Pátria, 300 – Botafogo, Rio de Janeiro", instagram: "esmalterialua",
+      titulo: "Unhas\nimpecáveis,\nsem espera.", texto: "Mão, pé, gel e nail art com hora marcada. Escolha a cor do dia e garanta seu horário pelo celular.",
+      profs: ["Lua Martins", "Bia Santos"], jornada: ["09:00", "20:00"], sabado: ["09:00", "18:00"], historico: 30, carga: 6,
+      servicos: [["mao", "Mão", "Cutilagem e esmaltação", 35, 40], ["pe", "Pé", "Cutilagem e esmaltação", 40, 45], ["maoepe", "Mão + pé", null, 70, 80],
+        ["gel", "Esmaltação em gel", "Dura até 3 semanas", 70, 60], ["fibra", "Alongamento em fibra", "Manutenção a cada 21 dias", 160, 120], ["nailart", "Nail art", "Por unha decorada", 10, 15]],
+      combos: [["mao"], ["pe"], ["maoepe"], ["gel"], ["gel", "nailart"], ["fibra"], ["mao", "pe"], ["gel"]],
+      promo: { nome: "Quarta da cor", pct: 20, dias: [3], de: "10:00", ate: "14:00", servico: "gel" }, cupom: "LUA10",
+      pacote: { nome: "Mão toda semana — 4x", servico: "mao", qtd: 4, preco: 120 },
+      obsCliente: "Gosta de unha quadrada e cores nude.",
+      clientes: ["Amanda Ferreira", "Beatriz Oliveira", "Camila Andrade", "Daniela Rocha", "Eduarda Lima", "Fernanda Torres", "Giovanna Alves", "Heloísa Moraes", "Ingrid Carvalho", "Júlia Batista",
+        "Kelly Nascimento", "Lívia Cardoso", "Manuela Pereira", "Nathalia Gomes", "Priscila Viana", "Rafaela Mendes", "Sofia Ribeiro", "Thaís Correia", "Valéria Dias", "Bianca Melo",
+        "Carla Pinheiro", "Laura Teixeira", "Marina Costa", "Renata Freire"],
+      depoimentos: ["Unhas perfeitas, durou 3 semanas!", "A nail art ficou um sonho.", "Super caprichosa e rápida.", null, "Ambiente fofo e cheiroso.", null,
+        "Amei a cor que a Lua indicou.", "Atendimento pontual, adoro.", null, "Minha esmalteria favorita.", null],
+      resposta: "Obrigada, volta sempre! 💅",
+    });
+
+    negocio({
+      email: "cilios@demo.com", slug: "atelier-olhar", nome: "Atelier Olhar", segmento: "cilios", tema: "minimal", cor: "#8a6a4f", plano: "premium",
+      whatsapp: "11991230003", ddd: "1198", endereco: "Rua Oscar Freire, 900 – Jardins, São Paulo", instagram: "atelierolhar",
+      titulo: "Olhar\nmarcante,\nnatural.", texto: "Design de sobrancelhas e extensão de cílios com acabamento natural. Agende online e venha no seu horário.",
+      profs: ["Marina Leal", "Priscila Duarte"], jornada: ["10:00", "19:00"], sabado: ["09:00", "15:00"], historico: 30, carga: 5,
+      servicos: [["design", "Design de sobrancelhas", "Com pinça e linha", 60, 40], ["henna", "Design com henna", null, 80, 50], ["brow", "Brow lamination", "Fios alinhados por semanas", 150, 60],
+        ["lash", "Lash lifting", "Curvatura natural, sem extensão", 160, 60], ["fio", "Extensão fio a fio", "Aplicação completa", 220, 120], ["manut", "Manutenção de cílios", "Até 21 dias", 120, 75]],
+      combos: [["design"], ["henna"], ["brow"], ["lash"], ["fio"], ["manut"], ["design", "lash"], ["henna"], ["manut"]],
+      promo: { nome: "Manhã do olhar", pct: 15, dias: [2, 4], de: "10:00", ate: "12:00", servico: "design" }, cupom: "OLHAR10",
+      pacote: { nome: "Manutenção — 3 sessões", servico: "manut", qtd: 3, preco: 320 },
+      obsCliente: "Prefere curvatura C, efeito natural.",
+      clientes: ["Alice Brandão", "Bárbara Siqueira", "Cecília Monteiro", "Diana Prates", "Estela Rangel", "Francine Toledo", "Graziela Viana", "Hanna Bastos", "Iara Coelho", "Joana Leme",
+        "Kátia Moreira", "Luana Paiva", "Melissa Sales", "Nicole Fontes", "Pietra Lacerda", "Rebeca Novais", "Simone Arruda", "Talita Barros", "Vitória Queiroz", "Bruna Lacerda",
+        "Clara Toledo", "Lorena Paiva", "Michele Arruda", "Stella Fontes"],
+      depoimentos: ["Sobrancelha perfeita, super natural.", "O lash lifting ficou incrível.", "Atendimento delicado e caprichoso.", null, "Espaço lindo e muito limpo.", null,
+        "Nunca mais faço em outro lugar.", "Resultado natural do jeito que eu pedi.", null, "Pontualidade nota 10.", null],
+      resposta: "Obrigada pelo carinho! ✨",
+    });
     return db;
   }
 
@@ -1024,6 +1101,7 @@
       .demo-pill { position: fixed; left: 12px; bottom: 12px; z-index: 99990; font: 700 12px/1 system-ui, sans-serif; letter-spacing: .08em; background: #ffb020; color: #1a1205;
         border: 0; border-radius: 999px; padding: 10px 14px; box-shadow: 0 6px 20px rgba(0,0,0,.35); cursor: pointer; }
       body.painel.logado .demo-pill { bottom: 84px; }
+      @media (max-width: 760px) { body:has(.barra-cel) .demo-pill { bottom: 70px; } }
       @media (min-width: 901px) { body.painel.logado .demo-pill { bottom: 12px; left: auto; right: 12px; } }
       .demo-menu { position: fixed; left: 12px; bottom: 58px; z-index: 99991; width: min(320px, calc(100vw - 24px)); max-height: 75vh; overflow: auto; background: #17140f; color: #f3ede4;
         border: 1px solid #3a3226; border-radius: 16px; padding: 14px; font: 14px/1.45 system-ui, sans-serif; box-shadow: 0 18px 50px rgba(0,0,0,.5); }

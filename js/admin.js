@@ -1,4 +1,4 @@
-// Painel da plataforma (dono do Navalha): barbearias clientes, planos, assinaturas e pagamentos.
+// Painel da plataforma (equipe do Marcaí): estabelecimentos clientes, planos, assinaturas e pagamentos.
 // Acesso: usuário cadastrado em public.plataforma_admins (ver README).
 (async () => {
   if (!configurado) return avisoNaoConfigurado();
@@ -45,25 +45,25 @@
       (!t || x.nome.toLowerCase().includes(t) || x.slug.includes(t) || (x.email_dono || "").toLowerCase().includes(t)));
     app.innerHTML = `<div class="kpis">
         <div class="card destaque"><span class="muted small">Receita mensal (MRR)</span><b>${dinheiro(mrr)}</b></div>
-        <div class="card"><span class="muted small">Barbearias</span><b>${lista.length}</b></div>
+        <div class="card"><span class="muted small">Estabelecimentos</span><b>${lista.length}</b></div>
         <div class="card"><span class="muted small">Em teste</span><b>${conta("teste")}</b></div>
         <div class="card"><span class="muted small">Ativas</span><b>${conta("ativa")}</b></div>
         <div class="card"><span class="muted small">Atrasadas</span><b>${conta("atrasada")}</b></div>
         <div class="card"><span class="muted small">Suspensas</span><b>${conta("suspensa") + conta("cancelada")}</b></div>
         <div class="card"><span class="muted small">Ajustes pendentes</span><b>${pedidos.filter(x => ["aberto", "em_andamento"].includes(x.status)).length}</b></div>
       </div>
-      <div class="row space"><h2>Barbearias</h2>
+      <div class="row space"><h2>Estabelecimentos</h2>
         <div class="filtros"><input id="busca" placeholder="Buscar nome, link ou e-mail" value="${esc(filtro.texto)}">
           <select id="fst"><option value="">Todos os status</option>${Object.entries(ST).map(([k, v]) => `<option value="${k}" ${k === filtro.status ? "selected" : ""}>${v}</option>`).join("")}</select></div></div>
-      <div class="tabela mt"><div class="tr th"><span>Barbearia</span><span>Plano</span><span>Status</span><span>Vence / teste até</span><span>Agend. 30d</span><span>Equipe</span><span></span></div>
+      <div class="tabela mt"><div class="tr th"><span>Estabelecimento</span><span>Plano</span><span>Status</span><span>Vence / teste até</span><span>Agend. 30d</span><span>Equipe</span><span></span></div>
         ${vis.map(x => `<div class="tr">
           <span><b>${esc(x.nome)}</b><br><span class="muted small">${esc(x.email_dono || "")} · <a href="site.html?b=${encodeURIComponent(x.slug)}" target="_blank" rel="noopener">site</a>${x.whatsapp ? ` · <a href="${linkWhats(x.whatsapp)}" target="_blank" rel="noopener">whats</a>` : ""}</span></span>
           <span>${esc(x.plano || "—")}${x.preco_mensal ? `<br><span class="mono small">${dinheiro(x.mensalidade ?? x.preco_mensal)}</span>` : ""}</span>
           <span><span class="tag ${x.status || "suspensa"}">${ST[x.status] || "Sem assinatura"}</span>${x.agenda_ligada ? "" : '<br><span class="small" style="color:#fca5a5">agenda off</span>'}</span>
           <span class="small">${x.status === "teste" ? "teste até " + fmtData(x.teste_ate) : fmtData(x.vencimento)}${x.ultimo_pagamento ? `<br><span class="muted">pago ${fmtData(x.ultimo_pagamento)}</span>` : ""}</span>
           <span class="mono">${x.agendamentos_30d}</span><span class="mono">${x.profissionais}</span>
-          <span class="row"><button class="btn btn-ghost btn-sm" data-ed="${x.id}">Assinatura</button><button class="btn btn-blue btn-sm" data-pag="${x.id}">+ Pagamento</button></span>
-        </div>`).join("") || `<div class="vazio">Nenhuma barbearia.</div>`}</div>
+          <span class="row"><button class="btn btn-ghost btn-sm" data-site="${x.id}">Site</button><button class="btn btn-ghost btn-sm" data-ed="${x.id}">Assinatura</button><button class="btn btn-blue btn-sm" data-pag="${x.id}">+ Pagamento</button></span>
+        </div>`).join("") || `<div class="vazio">Nenhum estabelecimento.</div>`}</div>
       <div class="card secao" style="padding:22px"><h2>Pedidos de ajuste</h2><p class="muted small">Pedidos de mudança nos sites. A cota do mês de cada plano é controlada pelo sistema.</p>
         ${pedidos.length ? pedidos.slice(0, 60).map(x => `<form class="pedido mt" data-ped="${x.id}">
           <div class="row space"><div><b>${esc(x.titulo)}</b> <span class="muted small">· ${esc(x.barbearias?.nome || "")} · ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(x.criado_em))}</span></div>
@@ -97,6 +97,7 @@
       try { await exec(sb.from("pedidos_ajuste").update({ status: d.status, resposta: d.resposta.trim() || null }).eq("id", f.dataset.ped), "Pedido atualizado."); iniciar(); } catch {}
     });
     $$("[data-ed]").forEach(b => b.onclick = () => modalAssinatura(lista.find(x => x.id === b.dataset.ed)));
+    $$("[data-site]").forEach(b => b.onclick = () => modalSite(b.dataset.site));
     $$("[data-pag]").forEach(b => b.onclick = () => modalPagamento(lista.find(x => x.id === b.dataset.pag)));
     $$("form.plano-card").forEach(f => f.onsubmit = async ev => {
       ev.preventDefault();
@@ -134,11 +135,72 @@
         <div class="campo"><label>Teste até</label><input type="date" id="a-teste" value="${x.teste_ate || ""}"></div>
         <div class="campo"><label>Vencimento</label><input type="date" id="a-venc" value="${x.vencimento || ""}"></div>
       </div>
-      <p class="muted small">Suspensa ou cancelada desliga a agenda online da barbearia. Atrasada mantém ligada (carência).</p>`,
+      <div class="campo"><label>Fidelidade até</label><input type="date" id="a-fid" value="${x.fidelidade_ate || ""}"></div>
+      <p class="muted small">Suspensa ou cancelada desliga a agenda online do estabelecimento. Atrasada mantém ligada (carência).</p>`,
     async m => {
       await exec(sb.from("assinaturas").upsert({ barbearia_id: x.id, plano_id: $("#a-plano", m).value || null, status: $("#a-st", m).value,
-        teste_ate: $("#a-teste", m).value || null, vencimento: $("#a-venc", m).value || null, atualizado_em: new Date().toISOString() }), "Assinatura atualizada.");
+        teste_ate: $("#a-teste", m).value || null, vencimento: $("#a-venc", m).value || null, fidelidade_ate: $("#a-fid", m).value || null, atualizado_em: new Date().toISOString() }), "Assinatura atualizada.");
     });
+  }
+
+  // Reduz a foto no navegador e envia para midia/<estabelecimento>/
+  async function enviarImagem(bid, arquivo, maxLado = 1600) {
+    if (!/^image\/(jpeg|png|webp)$/.test(arquivo.type)) throw new Error("Use foto JPG, PNG ou WEBP.");
+    const bmp = await createImageBitmap(arquivo);
+    const k = Math.min(1, maxLado / Math.max(bmp.width, bmp.height));
+    const cv = Object.assign(document.createElement("canvas"), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+    const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
+    const caminho = `${bid}/${crypto.randomUUID()}.jpg`;
+    const { error } = await sb.storage.from("midia").upload(caminho, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+    if (error) throw error;
+    return sb.storage.from("midia").getPublicUrl(caminho).data.publicUrl;
+  }
+
+  // Site do estabelecimento: visual, cores, textos, fotos e domínio (o dono só vê)
+  async function modalSite(bid) {
+    const { data: b, error } = await sb.from("barbearias").select("*").eq("id", bid).single();
+    if (error) return toast(msgErro(error), "erro");
+    const fotosTxt = (b.fotos || []).map(f => `${f.url}${f.legenda ? ` | ${f.legenda}` : ""}`).join("\n");
+    janela(`<h2>Site · ${esc(b.nome)}</h2>
+      <p class="muted small">Só a equipe altera. O dono vê o resultado no painel e pede mudanças em "Meu site".
+        <a href="site.html?b=${encodeURIComponent(b.slug)}" target="_blank" rel="noopener">Ver site ↗</a></p>
+      <div class="grid2 mt">
+        <div class="campo"><label>Área</label><select id="s-seg">${Object.entries(SEGMENTOS).map(([k, v]) => `<option value="${k}" ${k === b.segmento ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+        <div class="campo"><label>Estilo</label><select id="s-tema">${Object.entries(TEMAS_SITE).map(([k, v]) => `<option value="${k}" ${k === b.tema ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+      </div>
+      <div class="grid2">
+        <div class="campo"><label>Cor de destaque</label><input id="s-cor" type="color" value="${esc(b.cor_destaque || "#2e6bff")}"></div>
+        <div class="campo"><label>Domínio próprio</label><input id="s-dom" maxlength="100" value="${esc(b.dominio || "")}" placeholder="meunegocio.com.br"></div>
+      </div>
+      <div class="campo"><label>Título da capa (uma linha por linha)</label><textarea id="s-tit" rows="3" maxlength="80">${esc(b.site_titulo || "")}</textarea></div>
+      <div class="campo"><label>Texto de apresentação</label><textarea id="s-txt" rows="2" maxlength="400">${esc(b.site_texto || "")}</textarea></div>
+      <div class="grid2">
+        <div class="campo"><label>Instagram (sem @)</label><input id="s-ig" maxlength="30" value="${esc(b.instagram || "")}"></div>
+        <div class="campo"><label>Link do Google Maps</label><input id="s-maps" maxlength="500" value="${esc(b.maps_url || "")}"></div>
+      </div>
+      <div class="campo"><label>Foto da capa (URL)</label><div class="row"><input id="s-capa" class="grow" maxlength="500" value="${esc(b.hero_url || "")}">
+        <label class="btn btn-ghost btn-sm" style="margin:0">Enviar<input type="file" accept="image/*" id="s-capa-arq" hidden></label></div></div>
+      <div class="campo"><label>Galeria: uma foto por linha, "URL | legenda" (até 24)</label><textarea id="s-fotos" rows="5">${esc(fotosTxt)}</textarea>
+        <label class="btn btn-ghost btn-sm mt" style="margin:8px 0 0">+ Enviar fotos<input type="file" accept="image/*" multiple id="s-fotos-arq" hidden></label></div>`,
+    async m => {
+      const fotos = $("#s-fotos", m).value.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 24)
+        .map(l => { const [url, ...leg] = l.split("|"); return { url: url.trim(), legenda: leg.join("|").trim() }; });
+      await exec(sb.from("barbearias").update({
+        segmento: $("#s-seg", m).value, tema: $("#s-tema", m).value, cor_destaque: $("#s-cor", m).value,
+        dominio: $("#s-dom", m).value.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "") || null,
+        site_titulo: $("#s-tit", m).value.trim() || null, site_texto: $("#s-txt", m).value.trim() || null,
+        instagram: $("#s-ig", m).value.trim().replace(/^@/, "") || null, maps_url: $("#s-maps", m).value.trim() || null,
+        hero_url: $("#s-capa", m).value.trim() || null, fotos,
+      }).eq("id", b.id), "Site salvo.");
+    });
+    const m = $$(".modal").pop();
+    $(".card", m).style.width = "min(720px, 100%)";
+    $("#s-capa-arq", m).onchange = async e => { const f = e.target.files[0]; if (!f) return; try { toast("Enviando…"); $("#s-capa", m).value = await enviarImagem(b.id, f, 2000); toast("Capa enviada. Clique em Salvar."); } catch (er) { toast(msgErro(er), "erro"); } };
+    $("#s-fotos-arq", m).onchange = async e => {
+      for (const f of [...e.target.files]) { try { const url = await enviarImagem(b.id, f); $("#s-fotos", m).value = ($("#s-fotos", m).value.trim() + "\n" + url).trim(); } catch (er) { toast(msgErro(er), "erro"); } }
+      toast("Fotos enviadas. Clique em Salvar.");
+    };
   }
 
   function modalPagamento(x) {

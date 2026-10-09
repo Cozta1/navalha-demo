@@ -1,5 +1,5 @@
 /* =====================================================================
-   Navalha — telas do cliente (agendar, meu horário, minha conta)
+   Marcaí — telas do cliente (agendar, meu horário, minha conta)
    Premium e moderno: Fraunces + Hanken Grotesk, claro/escuro, formas
    arredondadas. A cor de destaque é a da barbearia (--blue, vinda do banco).
    Carregado DEPOIS de app.css e só nas páginas com <body class="cliente">.
@@ -67,6 +67,8 @@ body.cliente input, body.cliente select, body.cliente textarea {
 body.cliente input:focus, body.cliente select:focus, body.cliente textarea:focus {
   border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 18%, transparent);
 }
+.aviso-dados { text-align: center; margin-top: 10px; }
+.aviso-dados a { text-decoration: underline; }
 body.cliente .btn {
   border-radius: 999px; font-family: var(--sans); text-transform: none; letter-spacing: 0; font-weight: 600; font-size: .98rem;
   padding: 14px 24px; position: relative; overflow: hidden; border: 1px solid var(--line); background: var(--card);

@@ -4,20 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Painel · Navalha</title>
+<title>Painel · Marcaí</title>
 <meta name="theme-color" content="#0e0d0c">
 <script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect x='4' y='9' width='32' height='27' rx='9' fill='%23e09a63'/%3E%3Crect x='11' y='4.5' width='3.6' height='9' rx='1.8' fill='%230e0d0c'/%3E%3Crect x='25.4' y='4.5' width='3.6' height='9' rx='1.8' fill='%230e0d0c'/%3E%3Cpath d='M12.5 23 18 28.2 28 17.6' fill='none' stroke='%231d130c' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/app.css">
 <link rel="stylesheet" href="css/cliente.css">
 <link rel="stylesheet" href="css/painel.css">
+<style>/* antes de entrar: cobre do Marcaí (depois, a cor do negócio) */ :root { --blue: #c8703f; --on-accent: #1e1009; }</style>
 </head>
 <body class="cliente painel">
 <header class="topo-login" id="topoLogin"><div class="wrap">
   <a class="marca-n" href="./"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5602f"/><stop offset=".45" stop-color="#f3c39b"/><stop offset="1" stop-color="#c8703f"/></linearGradient></defs>
-    <path d="M8 27 29 8c3-2.4 6.6 1.2 4.2 4.2L14 32z" fill="url(#lg)"/><path d="M14 32 7 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="14" cy="32" r="2.2" fill="currentColor"/></svg>navalha</a>
+    <rect x="4" y="9" width="32" height="27" rx="9" fill="url(#lg)"/><rect x="11" y="4.5" width="3.6" height="9" rx="1.8" fill="currentColor"/><rect x="25.4" y="4.5" width="3.6" height="9" rx="1.8" fill="currentColor"/><path d="M12.5 23 18 28.2 28 17.6" fill="none" stroke="#1d130c" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>marcaí</a>
   <span id="temaLogin"></span>
 </div></header>
 <!-- compatibilidade com o código antigo (marca/link/sair agora vivem no menu lateral) -->

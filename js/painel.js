@@ -35,12 +35,13 @@
     const cadastro = modo === "cadastrar", recuperar = modo === "recuperar";
     app.innerHTML = `<div class="auth card">
       <h1>${cadastro ? "Criar conta" : recuperar ? "Recuperar senha" : "Entrar"}</h1>
-      ${conviteTok ? `<p class="small" style="text-align:center;margin-bottom:12px;color:#86efac">Você foi convidado para a equipe de uma barbearia. ${cadastro ? "Crie a conta" : "Entre"} com o <b>mesmo e-mail do convite</b>.</p>` : ""}
-      <p class="muted small" style="text-align:center;margin-bottom:18px">${cadastro ? "Comece a receber agendamentos online da sua barbearia." : recuperar ? "Enviaremos um link para você criar uma nova senha." : "Acesse a agenda da sua barbearia."}</p>
+      ${conviteTok ? `<p class="small" style="text-align:center;margin-bottom:12px;color:#86efac">Você foi convidado para a equipe de um estabelecimento. ${cadastro ? "Crie a conta" : "Entre"} com o <b>mesmo e-mail do convite</b>.</p>` : ""}
+      <p class="muted small" style="text-align:center;margin-bottom:18px">${cadastro ? "Comece a receber agendamentos online do seu negócio." : recuperar ? "Enviaremos um link para você criar uma nova senha." : "Acesse a agenda do seu negócio."}</p>
       <form id="f">
         <div class="campo"><label>E-mail</label><input type="email" id="email" required autocomplete="email"></div>
         ${recuperar ? "" : `<div class="campo"><label>Senha</label><input type="password" id="senha" required minlength="6" autocomplete="${cadastro ? "new-password" : "current-password"}"></div>`}
         <button class="btn btn-blue btn-block" id="go">${cadastro ? "Criar conta" : recuperar ? "Enviar link" : "Entrar"}</button>
+        ${cadastro ? `<p class="muted small" style="margin-top:10px;text-align:center">Ao criar a conta, você concorda com os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>` : ""}
         <p class="erro hidden" id="err"></p>
       </form>
       <p class="small muted mt" style="text-align:center">
@@ -82,18 +83,20 @@
   // =================== Cadastro da barbearia ===================
   function telaOnboarding() {
     app.innerHTML = `<div class="auth card" style="max-width:520px">
-      <h1>Sua barbearia</h1>
+      <h1>Seu negócio</h1>
       <p class="muted small" style="text-align:center;margin-bottom:18px">Leva 1 minuto. Dá para mudar tudo depois.</p>
       <form id="f">
-        <div class="campo"><label>Nome da barbearia</label><input id="nome" required minlength="2" maxlength="80" placeholder="Ex.: Os Barbeiros JF"></div>
+        <div class="campo"><label>Nome do negócio</label><input id="nome" required minlength="2" maxlength="80" placeholder="Ex.: Studio Bella Donna"></div>
         <div class="campo"><label>Endereço do link de agendamento</label>
           <div class="row"><span class="muted small">agendar.html?b=</span><input id="slug" class="grow" required pattern="[a-z0-9][a-z0-9-]{1,38}[a-z0-9]" maxlength="40" style="width:auto"></div>
           <p class="muted small" style="margin-top:4px">Só letras minúsculas, números e hífen.</p></div>
+        <div class="campo"><label>Área de atuação</label><select id="seg">${Object.entries(SEGMENTOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></div>
         <div class="grid2">
-          <div class="campo"><label>WhatsApp da barbearia</label><input id="whats" inputmode="tel" placeholder="(32) 99999-9999"></div>
+          <div class="campo"><label>WhatsApp</label><input id="whats" inputmode="tel" placeholder="(32) 99999-9999"></div>
           <div class="campo"><label>Seu nome (primeiro profissional)</label><input id="prof" required maxlength="60"></div>
         </div>
-        <button class="btn btn-blue btn-block" id="go">Criar barbearia</button>
+        <label class="aceite"><input type="checkbox" id="aceite" required> <span>Li e aceito os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>, inclusive o papel do Marcaí como operador dos dados dos meus clientes.</span></label>
+        <button class="btn btn-blue btn-block" id="go">Criar meu negócio</button>
         <p class="erro hidden" id="err"></p>
       </form></div>`;
     mascaraTelefone($("#whats"));
@@ -109,11 +112,11 @@
       const err = $("#err"), btn = $("#go");
       err.classList.add("hidden"); btn.disabled = true;
       const { error } = await sb.rpc("criar_barbearia", {
-        p_nome: $("#nome").value, p_slug: $("#slug").value, p_whatsapp: $("#whats").value, p_profissional: $("#prof").value,
+        p_nome: $("#nome").value, p_slug: $("#slug").value, p_whatsapp: $("#whats").value, p_profissional: $("#prof").value, p_segmento: $("#seg").value,
       });
       btn.disabled = false;
       if (error) { err.textContent = msgErro(error); err.classList.remove("hidden"); return; }
-      toast("Barbearia criada! Agora cadastre seus serviços.");
+      toast("Pronto! Agora cadastre seus serviços.");
       aba = "servicos";
       iniciar();
     };
@@ -144,7 +147,7 @@
     diaAgenda ??= hojeNoFuso(barb.fuso);
     if (!MENU.some(i => i.a === aba && visivel(i))) aba = "inicio";
     const marca = `<div class="lat-marca">${barb.logo_url ? `<img src="${esc(barb.logo_url)}" alt="">` : `<span class="ini">${esc(barb.nome.trim()[0] || "N").toUpperCase()}</span>`}
-      <div><b>${esc(barb.nome)}</b><small>${ehDono() ? "Painel do dono" : "Painel do barbeiro"}</small></div></div>`;
+      <div><b>${esc(barb.nome)}</b><small>${ehDono() ? "Painel do dono" : "Painel do profissional"}</small></div></div>`;
     const botao = (i, cls) => `<button class="${cls}" data-a="${i.a}"><span class="ic">${i.ic}</span>${cls === "nav-item" ? `${esc(rotulo(i))}${i.trava && !tem(i.trava) ? '<span class="cad">🔒</span>' : ""}` : `<span>${esc(i.curto || rotulo(i))}</span>`}</button>`;
     const grupos = [...new Set(MENU.map(i => i.g))];
     app.innerHTML = `<div class="shell">
@@ -188,7 +191,7 @@
     { a: "profissionais", ic: "👤", t: "Profissionais", g: "Configurações" },
     { a: "equipe", ic: "🔑", t: "Equipe", g: "Configurações" },
     { a: "ajustes", ic: "🌐", t: "Meu site", g: "Configurações", trava: "site" },
-    { a: "config", ic: "⚙️", t: "Barbearia", g: "Configurações" },
+    { a: "config", ic: "⚙️", t: "Meu negócio", g: "Configurações" },
   ];
   const visivel = i => i.todos || ehDono();
   const rotulo = i => (!ehDono() && i.tb) || i.t;
@@ -499,9 +502,11 @@
         <div class="col-corpo" style="height:${alt}px">${fora.map(([a, b]) => `<div class="fora" style="top:${top(a)}px;height:${(b - a) * PX_MIN}px"></div>`).join("")}${bloqs}${blocos}</div></div>`;
     };
 
+    // o cabeçalho com os nomes fica dentro da rolagem: acompanha a rolagem para o lado e gruda no topo
     box.innerHTML = visiveis.length ? `<div class="tempo">
+        <div class="tempo-rolagem" id="rolagem">
         <div class="tempo-cab"><div class="canto"></div>${visiveis.map(p => `<div class="cab-prof"><span class="av-p">${esc(p.nome.split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase())}</span>${esc(p.nome)}</div>`).join("")}</div>
-        <div class="tempo-rolagem" id="rolagem"><div class="tempo-grade" style="height:${alt}px">
+        <div class="tempo-grade" style="height:${alt}px">
           <div class="col-horas">${horas.map(m => `<span style="top:${top(m)}px">${String(m / 60).padStart(2, "0")}:00</span>`).join("")}</div>
           <div class="cols" style="background-size:100% ${60 * PX_MIN}px">${visiveis.map(coluna).join("")}</div>
           <div class="agora-linha hidden" id="agora-linha"><span></span></div>
@@ -924,7 +929,7 @@
         <div class="campo"><label>E-mail</label><input id="f-email" type="email" maxlength="120" value="${esc(cl.email || "")}"></div>
         <div class="campo"><label>Aniversário</label><input id="f-nasc" type="date" value="${cl.nascimento || ""}"></div>
       </div>
-      <div class="campo"><label>Observações (só a barbearia vê)</label><textarea id="f-obs" rows="3" maxlength="1000" placeholder="Ex.: prefere máquina 1 dos lados, alergia a…">${esc(cl.observacoes || "")}</textarea></div>
+      <div class="campo"><label>Observações (só a equipe vê)</label><textarea id="f-obs" rows="3" maxlength="1000" placeholder="Ex.: prefere máquina 1 dos lados, alergia a…">${esc(cl.observacoes || "")}</textarea></div>
       <div id="f-pac"></div>
       <h3 class="mt">Histórico</h3><div id="f-hist" class="mt"><p class="carregando">Carregando…</p></div>`,
     async m => {
@@ -1285,8 +1290,9 @@
     }
     const pct = v => `${String(Number(v)).replace(".", ",")}%`;
     const kpi = (t, v, sub = "") => `<div class="card"><span class="muted small">${t}</span><b>${v}</b>${sub ? `<span class="muted small">${sub}</span>` : ""}</div>`;
-    const tabela = (cab, linhas) => linhas.length ? `<div class="tabela"><div class="tr th" style="grid-template-columns:${cab.map(x => x[1]).join(" ")}">${cab.map(x => `<span>${x[0]}</span>`).join("")}</div>
-      ${linhas.map(l => `<div class="tr" style="grid-template-columns:${cab.map(x => x[1]).join(" ")}">${l.map(v => `<span>${v}</span>`).join("")}</div>`).join("")}</div>` : `<p class="muted small">Sem dados no período.</p>`;
+    // colunas em minmax(0, …): nunca passam da largura do card
+    const tabela = (cab, linhas) => (cab = cab.map(([n, w]) => [n, `minmax(0,${w})`]), linhas.length) ? `<div class="tabela"><div class="tr th" style="grid-template-columns:${cab.map(x => x[1]).join(" ")}">${cab.map(x => `<span>${x[0]}</span>`).join("")}</div>
+      ${linhas.map(l => `<div class="tr" style="grid-template-columns:${cab.map(x => x[1]).join(" ")}">${l.map((v, k) => `<span data-r="${cab[k][0]}">${v}</span>`).join("")}</div>`).join("")}</div>` : `<p class="muted small">Sem dados no período.</p>`;
     $("#rel").innerHTML = `
       <div class="resumo-dia">
         ${kpi("Faturamento", dinheiro(r.faturamento), Number(r.descontos) ? `${dinheiro(r.descontos)} em descontos` : "")}
@@ -1489,14 +1495,14 @@
     const comLogin = new Set(membros.filter(m => m.papel === "barbeiro").map(m => m.profissional_id));
     const linkConvite = t => new URL(`painel.html?convite=${t}`, location.href).href;
     const pendentes = convites.filter(x => new Date(x.expira_em) > new Date());
-    c.innerHTML = `<div class="row space"><div><h2>Equipe</h2><p class="muted small">Cada barbeiro entra com o próprio e-mail e vê só a agenda e o caixa dele.</p></div></div>
+    c.innerHTML = `<div class="row space"><div><h2>Equipe</h2><p class="muted small">Cada profissional entra com o próprio e-mail e vê só a própria agenda e o próprio caixa.</p></div></div>
       <div class="card mt"><h3>Quem tem acesso</h3>
         ${membros.map(m => `<div class="espera-item"><div><b>${m.papel === "dono" ? "Você (dono)" : esc(nomeProf(m.profissional_id))}</b> <span class="tag ${m.papel === "dono" ? "confirmado" : "concluido"}">${m.papel === "dono" ? "Dono" : "Barbeiro"}</span></div>
           ${m.papel === "barbeiro" ? `<button class="btn btn-red btn-sm" data-tirar="${m.user_id}">Remover acesso</button>` : ""}</div>`).join("")}</div>
-      <form class="card mt" id="fc"><h3>Convidar barbeiro</h3>
+      <form class="card mt" id="fc"><h3>Convidar profissional</h3>
         <p class="muted small" style="margin:6px 0 12px">Ele recebe um link, cria a conta com este e-mail e já cai na própria agenda. O convite vale 7 dias.</p>
         <div class="grid2">
-          <div class="campo"><label>E-mail do barbeiro</label><input type="email" id="cv-email" required placeholder="barbeiro@email.com"></div>
+          <div class="campo"><label>E-mail do profissional</label><input type="email" id="cv-email" required placeholder="profissional@email.com"></div>
           <div class="campo"><label>É qual profissional?</label><select id="cv-prof">${profs.filter(p => p.ativo && !comLogin.has(p.id)).map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join("") || '<option value="">Todos já têm acesso</option>'}</select></div>
         </div>
         <button class="btn btn-blue">Gerar convite</button></form>
@@ -1516,7 +1522,7 @@
     $$("[data-copiar]").forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(linkConvite(b.dataset.copiar)); toast("Link copiado."); } catch { prompt("Copie o link:", linkConvite(b.dataset.copiar)); } });
     $$("[data-cancelar]").forEach(b => b.onclick = async () => { try { await exec(sb.from("convites").delete().eq("id", b.dataset.cancelar), "Convite cancelado."); telaEquipe(); } catch {} });
     $$("[data-tirar]").forEach(b => b.onclick = async () => {
-      if (!confirm("Remover o acesso deste barbeiro? Os atendimentos dele continuam na agenda.")) return;
+      if (!confirm("Remover o acesso deste profissional? Os atendimentos continuam na agenda.")) return;
       try { await exec(sb.from("membros").delete().eq("barbearia_id", barb.id).eq("user_id", b.dataset.tirar), "Acesso removido."); telaEquipe(); } catch {}
     });
   }
@@ -1555,6 +1561,7 @@
     const linkSite = new URL(`site.html?b=${barb.slug}`, location.href).href;
     c.innerHTML = `<div class="row space"><div><h2>Meu site</h2><p class="muted small">Seu site é montado e mantido pela nossa equipe. Preços, horários, equipe e avaliações atualizam sozinhos; para trocar fotos, textos ou banners, é só pedir aqui.</p></div>
         <a class="btn btn-ghost btn-sm" href="${linkSite}" target="_blank" rel="noopener">Ver meu site ↗</a></div>
+      ${cardVisual()}
       <div class="card cota mt"><span class="muted small">Ajustes deste mês</span><b>${resta} de ${cota.limite}</b><span class="muted small">pedido${cota.limite === 1 ? "" : "s"} restante${resta === 1 ? "" : "s"}</span></div>
       ${resta ? `<form class="card mt" id="fa"><h3>Novo pedido</h3>
           <div class="campo mt"><label>O que você quer mudar?</label><input id="aj-t" required minlength="3" maxlength="80" placeholder="Ex.: trocar a foto da capa"></div>
@@ -1570,6 +1577,16 @@
       ev.preventDefault();
       try { await exec(sb.rpc("pedir_ajuste", { p_barbearia: barb.id, p_titulo: $("#aj-t").value, p_descricao: $("#aj-d").value }), "Pedido enviado. Avisamos por aqui quando estiver pronto."); telaAjustes(); } catch {}
     });
+  }
+
+  // Visual do site e da página de agendamento: o dono vê; quem muda é a nossa equipe
+  function cardVisual() {
+    return `<div class="card mt"><h2>Visual</h2>
+      <div class="visual-info">
+        <span class="amostra" style="background:${esc(barb.cor_destaque || "#2e6bff")}"></span>
+        <div><b>${esc(TEMAS_SITE[barb.tema] || barb.tema)}</b><span class="muted small">Cor ${esc(barb.cor_destaque || "")} · ${esc(SEGMENTOS[barb.segmento] || "")}</span></div>
+      </div>
+      <p class="muted small mt">O estilo e as cores do site e da página de agendamento são feitos pela nossa equipe.${tem("site") ? ` Quer mudar? Peça em <button class="link-btn" data-ir-site>Meu site</button>.` : ""}</p></div>`;
   }
 
   // Plano atual e quanto custa com a equipe de hoje (R$ extra por profissional além dos inclusos)
@@ -1592,10 +1609,11 @@
     const c = $("#conteudo");
     c.innerHTML = `
       ${cardPlano()}
+      ${cardVisual()}
       <div class="card mt"><h2>Link de agendamento</h2>
         <p class="muted small" style="margin-bottom:10px">Coloque no Instagram, no Google e no seu site.</p>
         <div class="link-publico"><input readonly value="${esc(linkPublico())}" id="lnk"><button class="btn btn-blue btn-sm" id="copiar">Copiar</button></div></div>
-      <form class="card mt" id="f"><h2>Dados da barbearia</h2>
+      <form class="card mt" id="f"><h2>Dados do negócio</h2>
         <div class="grid2">
           <div class="campo"><label>Nome</label><input name="nome" required maxlength="80" value="${esc(barb.nome)}"></div>
           <div class="campo"><label>WhatsApp</label><input name="whatsapp" inputmode="tel" value="${esc(fmtTelefone(barb.whatsapp || ""))}"></div>
@@ -1617,11 +1635,11 @@
         </div>
         <div class="grid2">
           <div class="campo"><label>Horários futuros por cliente</label><input name="max_futuros" type="number" min="1" max="20" value="${barb.max_futuros}"></div>
-          <div class="campo"><label>Cor de destaque</label><input name="cor_destaque" type="color" value="${esc(barb.cor_destaque || "#2e6bff")}" style="height:46px;padding:4px"></div>
         </div>
         <div class="row" style="justify-content:flex-end"><button class="btn btn-blue">Salvar</button></div>
       </form>`;
     mascaraTelefone($("[name=whatsapp]"));
+    $("[data-ir-site]")?.addEventListener("click", () => abrir("ajustes"));
     $("#logo-arq").onchange = async e => {
       const f = e.target.files[0]; if (!f) return;
       try { toast("Enviando…"); $("[name=logo_url]").value = await enviarImagem(f, 600); toast("Logo enviada. Clique em Salvar."); }
@@ -1638,7 +1656,7 @@
         nome: d.nome.trim(), whatsapp: soDigitos(d.whatsapp) || null, endereco: d.endereco.trim() || null,
         logo_url: d.logo_url.trim() || null, site_url: d.site_url.trim() || null,
         intervalo_min: Number(d.intervalo_min), antecedencia_min: Number(d.antecedencia_min), dias_abertos: Number(d.dias_abertos),
-        cancelamento_horas: Number(d.cancelamento_horas), max_futuros: Number(d.max_futuros), cor_destaque: d.cor_destaque,
+        cancelamento_horas: Number(d.cancelamento_horas), max_futuros: Number(d.max_futuros),
       };
       try {
         barb = await exec(sb.from("barbearias").update(reg).eq("id", barb.id).select().single(), "Dados salvos.");
