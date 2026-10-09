@@ -30,6 +30,9 @@
   const resumo = rs.data || { total: 0, profissionais: {} };
   const depoimentos = (av.data || []).filter(x => x.comentario && x.nota >= 4);
 
+  // dentro do celular da página inicial (iframe): rola sem mostrar a barra de rolagem
+  if (window.self !== window.top) document.head.insertAdjacentHTML("beforeend", "<style>html{scrollbar-width:none}html::-webkit-scrollbar{display:none}</style>");
+
   // ---------- tema e textos da área ----------
   const TEXTOS = {
     barbearia: { rotulo: "Barbearia", titulo: "Corte\nna régua,\nsem fila.", precos: `Preço<br><span class="fino">na parede.</span>`, precosLead: "Sem surpresa no fim. Escolha o serviço, marque online e pague no salão.",

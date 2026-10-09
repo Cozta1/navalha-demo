@@ -84,7 +84,7 @@
     $$("[data-k]").forEach(el => { el.innerHTML = cfg[el.dataset.k] ?? original[el.dataset.k]; });
     i = 0; quebra(h1);
     const exemplo = seg || "barbearia"; // a versão geral mostra a barbearia no celular
-    $$(".seletor-area [data-seg]").forEach(b => b.setAttribute("aria-selected", b.dataset.seg === exemplo));
+    $$(".seletor-area [data-seg]").forEach(b => b.setAttribute("aria-selected", b.dataset.seg === seg));
     $("#faixa").innerHTML = [...cfg.faixa, ...cfg.faixa].map(t => `<span>${t}</span>`).join("");
     const prints = PRINTS[seg];
     $$("img[data-img]").forEach(el => { const de = prints ? prints[el.dataset.img] : seg; el.onerror = () => { el.onerror = null; el.src = el.dataset.padrao; }; el.src = de ? `img/seg/${de}-${el.dataset.img}.webp` : el.dataset.padrao; });
