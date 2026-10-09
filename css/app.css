@@ -87,3 +87,6 @@ input[type=checkbox], input[type=radio] { width: auto; accent-color: var(--blue)
 .carregando { color: var(--muted); padding: 20px 0; text-align: center; }
 .vazio { color: var(--muted); padding: 28px; text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); }
 .link-btn { background: none; border: 0; color: var(--blue-light); font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+
+/* celular: a página nunca rola para o lado */
+html, body { overflow-x: clip; }

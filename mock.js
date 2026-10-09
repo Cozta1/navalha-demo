@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ["Painel do dono", "painel.html"], ["Painel (plano Essencial)", "painel.html?plano=essencial"], ["Painel do barbeiro", "painel.html?barbeiro=1"], ["Admin", "admin.html"]];
   const d = document.createElement("div");
   d.style.cssText = "position:fixed;left:8px;bottom:" + (innerWidth < 760 ? 66 : 8) + "px;z-index:99999;background:#ffb020;color:#111;font:600 11px/1.4 ui-monospace,monospace;padding:6px 8px;max-width:calc(100% - 16px);box-shadow:0 4px 14px rgba(0,0,0,.4)";
-  d.innerHTML = `DEMONSTRAÇÃO · dados de exemplo, nada é salvo · <select style="font:inherit;padding:2px;width:auto;background:#fff;color:#111;border:1px solid #111">
+  d.innerHTML = `${innerWidth < 760 ? "DEMO ·" : "DEMONSTRAÇÃO · dados de exemplo, nada é salvo ·"} <select style="font:inherit;padding:2px;width:auto;background:#fff;color:#111;border:1px solid #111">
     <option>ir para…</option>${links.map(([t, u]) => `<option value="${u}">${t}</option>`).join("")}</select>`;
   d.querySelector("select").onchange = e => e.target.value && (location.href = e.target.value);
   document.body.appendChild(d);

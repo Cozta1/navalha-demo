@@ -48,6 +48,8 @@
   .pedido { border-top: 1px solid var(--line); padding: 16px 0 4px; }
   .pedido:first-of-type { border-top: 0; }
   .row-f { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row input.grow, .row-f input.grow { min-width: 0; flex: 1 1 200px; }
+  .row:has(> input.grow) { flex-wrap: wrap; }
 </style>
 </head>
 <body class="cliente">
@@ -59,7 +61,6 @@
 <main class="wrap" id="app"><p class="carregando">Carregando…</p></main>
 
 <script src="mock.js"></script>
-
 <script src="js/comum.js"></script>
 <script>$("#tema").replaceWith(botaoTema());</script>
 <script src="js/admin.js"></script>

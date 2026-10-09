@@ -54,7 +54,7 @@
   /* ========= Hero ========= */
   .hero { padding: 54px 0 0; overflow: hidden; }
   .hero .grade { display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: end; }
-  @media (max-width: 900px) { .hero .grade { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .hero .grade { grid-template-columns: 1fr; } .hero .grade > * { min-width: 0; } }
   .hero .titulo { font-size: clamp(4.2rem, 13vw, 10.5rem); }
   .hero .titulo span { display: block; }
   .linha-entra { opacity: 0; transform: translateY(40%); animation: entra .8s cubic-bezier(.2,.8,.2,1) forwards; }
@@ -113,6 +113,7 @@
   .mosaico img { width: 100%; height: auto; filter: grayscale(.85) contrast(1.1); transition: filter .35s, transform .5s; }
   .mosaico figure:hover img { filter: none; transform: scale(1.03); }
   .mosaico figcaption { position: absolute; left: 0; bottom: 0; background: var(--asfalto); color: var(--cartaz); font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; padding: 6px 10px; }
+  @media (max-width: 600px) { .mosaico { columns: 2; column-gap: 8px; } .mosaico figure { margin-bottom: 8px; } .mosaico figcaption { font-size: .62rem; padding: 4px 7px; } }
 
   /* ========= Avaliações ========= */
   .avaliacoes { background: var(--concreto) var(--ruido); border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
@@ -210,3 +211,6 @@ body.classico { --azul-claro: color-mix(in srgb, var(--azul) 75%, black); }
 body.classico .btn-claro { background: var(--cartaz); color: var(--asfalto); border-color: var(--cartaz); }
 body.classico .btn-claro:hover { box-shadow: 6px 6px 0 var(--azul); }
 body.classico .qtd .estrelas, body.classico .fatos .estrelas { color: #c48a00; }
+
+/* celular: a página nunca rola para o lado */
+html, body { overflow-x: clip; }
