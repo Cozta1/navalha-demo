@@ -161,6 +161,7 @@ nav.menu a.ln:hover { color: var(--text); }
 .plano .desc { color: var(--muted); font-size: .92rem; margin-top: 6px; min-height: 44px; }
 .plano .preco { font-family: var(--serif); font-size: 3.3rem; font-weight: 600; letter-spacing: -.03em; margin: 18px 0 2px; }
 .plano .preco small { font-family: var(--sans); font-size: .95rem; color: var(--muted); font-weight: 400; letter-spacing: 0; }
+.plano .extra { color: var(--muted); font-size: .86rem; line-height: 1.45; min-height: 2.9em; }
 .plano ul { list-style: none; margin: 18px 0 26px; display: grid; gap: 9px; font-size: .95rem; flex: 1; }
 .plano li { display: flex; gap: 9px; }
 .plano li::before { content: "✓"; color: var(--cobre-txt); font-weight: 700; }

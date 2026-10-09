@@ -4,7 +4,7 @@
 // Usado só na demo publicada (scripts/gerar-demo.py troca o supabase-js por este arquivo).
 (() => {
   const CHAVE = "marcai_demo_db";
-  const VERSAO = 1;
+  const VERSAO = 2; // muda quando os dados de exemplo mudam (recria a demo de quem já abriu)
   const FUSO = "America/Sao_Paulo";
   const Q = new URLSearchParams(location.search);
 
@@ -97,6 +97,14 @@
     return !!pl?.recursos?.includes(recurso);
   }
 
+  // plano + profissionais ativos além dos inclusos
+  function mensalidade(b) {
+    const a = T("assinaturas").find(x => x.barbearia_id === b), pl = a && T("planos").find(p => p.id === a.plano_id);
+    if (!pl) return null;
+    const ativos = T("profissionais").filter(p => p.barbearia_id === b && p.ativo).length;
+    return r2(Number(pl.preco_mensal) + Math.max(0, ativos - pl.profissionais_inclusos) * Number(pl.preco_extra));
+  }
+
   // ---------------------------------------------------------------- linhas novas: padrões e gatilhos
   function padrao(t) {
     const agora = agoraIso();
@@ -124,8 +132,8 @@
         motivo_cancelamento: null, aberta_em: agora, fechada_em: null, cancelada_em: null },
       comanda_itens: { servico_id: null, produto_id: null, pacote_id: null, pacote_cliente_id: null, profissional_id: null, quantidade: 1, total: 0, comissao_pct: null, comissao_valor: null },
       comanda_pagamentos: { criado_em: agora },
-      planos: { max_profissionais: null, ativo: true, ordem: 0, recursos: [], ajustes_mes: 1, descricao: null },
-      assinaturas: { plano_id: null, status: "teste", teste_ate: null, vencimento: null, observacao: null, atualizado_em: agora },
+      planos: { max_profissionais: null, ativo: true, ordem: 0, recursos: [], ajustes_mes: 1, descricao: null, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0 },
+      assinaturas: { plano_id: null, status: "teste", teste_ate: null, vencimento: null, fidelidade_ate: null, observacao: null, atualizado_em: agora },
       pagamentos_assinatura: { forma: "pix", pago_em: hojeEm(FUSO), criado_em: agora },
       convites: { token: uuid(), expira_em: new Date(Date.now() + 7 * 86400000).toISOString(), aceito_em: null, criado_em: agora },
       pedidos_ajuste: { status: "aberto", resposta: null, criado_em: agora, atualizado_em: agora },
@@ -739,6 +747,7 @@
         const dono = T("membros").find(m => m.barbearia_id === b.id && m.papel === "dono");
         return { id: b.id, nome: b.nome, slug: b.slug, whatsapp: b.whatsapp, criado_em: b.criado_em, dominio: b.dominio,
           status: a.status ?? null, teste_ate: a.teste_ate ?? null, vencimento: a.vencimento ?? null, plano_id: a.plano_id ?? null, plano: pl?.nome ?? null, preco_mensal: pl?.preco_mensal ?? null,
+          fidelidade_ate: a.fidelidade_ate ?? null, mensalidade: mensalidade(b.id),
           agenda_ligada: assinaturaAtiva(b.id), profissionais: T("profissionais").filter(p => p.barbearia_id === b.id && p.ativo).length,
           agendamentos_30d: T("agendamentos").filter(g => g.barbearia_id === b.id && Date.parse(g.criado_em) > Date.now() - 30 * 86400000).length,
           ultimo_pagamento: T("pagamentos_assinatura").filter(p => p.barbearia_id === b.id).map(p => p.pago_em).sort().pop() ?? null,
@@ -758,6 +767,8 @@
     },
 
     barbearia_por_dominio() { return null; },
+    plano_tem({ p_barbearia, p_recurso }) { return planoTem(p_barbearia, p_recurso); },
+    mensalidade({ p_barbearia }) { return mensalidade(p_barbearia); },
 
     cota_ajustes({ p_barbearia }) {
       const a = T("assinaturas").find(x => x.barbearia_id === p_barbearia), pl = a && T("planos").find(p => p.id === a.plano_id), b = barbearia(p_barbearia);
@@ -776,7 +787,7 @@
 
   // funções que só leem: não contam como "a pessoa mexeu" (os dados de exemplo continuam se renovando)
   const LEITURA = new Set(["horarios_disponiveis", "consultar_agendamento", "meus_agendamentos", "resumo_avaliacoes", "relatorio", "validar_cupom",
-    "marketing_clientes", "admin_barbearias", "barbearia_por_dominio", "cota_ajustes"]);
+    "marketing_clientes", "admin_barbearias", "barbearia_por_dominio", "cota_ajustes", "plano_tem", "mensalidade"]);
 
   // ---------------------------------------------------------------- autenticação
   const ouvintes = [];
@@ -846,9 +857,12 @@
 
     // planos (mesmos do schema)
     const planos = [
-      inserir("planos", { nome: "Essencial", preco_mensal: 149, max_profissionais: 2, recursos: [], ajustes_mes: 1, ordem: 1, descricao: "Site próprio com domínio, agenda online e caixa para até 2 profissionais." }),
-      inserir("planos", { nome: "Profissional", preco_mensal: 229, max_profissionais: 6, recursos: ["relatorios_completos", "comissoes", "marketing", "emails"], ajustes_mes: 3, ordem: 2, descricao: "Tudo do Essencial + comissões, marketing, e-mails automáticos e relatórios completos." }),
-      inserir("planos", { nome: "Premium", preco_mensal: 329, max_profissionais: null, recursos: ["relatorios_completos", "comissoes", "estoque", "marketing", "emails"], ajustes_mes: 6, ordem: 3, descricao: "Tudo do Profissional + estoque, equipe ilimitada e atendimento prioritário." }),
+      inserir("planos", { nome: "Básico", preco_mensal: 89, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0, recursos: [], ajustes_mes: 0, ordem: 1,
+        descricao: "Agenda online 24h, página de agendamento, conta do cliente, avaliações e caixa." }),
+      inserir("planos", { nome: "Profissional", preco_mensal: 249, profissionais_inclusos: 2, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails"], ajustes_mes: 2, ordem: 2,
+        descricao: "Tudo do Básico + site próprio com domínio, relatórios completos e comissões." }),
+      inserir("planos", { nome: "Premium", preco_mensal: 349, profissionais_inclusos: 4, preco_extra: 20, fidelidade_meses: 12, recursos: ["site", "relatorios_completos", "comissoes", "emails", "marketing", "estoque"], ajustes_mes: 5, ordem: 3,
+        descricao: "Tudo do Profissional + promoções por horário, cupons, pacotes, marketing e estoque." }),
     ];
 
     // ---------- Os Barbeiros JF ----------
@@ -857,8 +871,8 @@
       site_texto: "Barbearia tradicional com estilo moderno. Escolha o serviço e o melhor horário pra você em poucos cliques.", instagram: "gabrielpires_barber01", hero_url: "cadeira.jpg",
       fotos: [{ url: "corte1.jpg", legenda: "Barba" }, { url: "salao2.jpg", legenda: "O salão" }, { url: "corte3.jpg", legenda: "Corte + barba" }, { url: "atendimento.jpg", legenda: "Na cadeira" },
         { url: "corte2.jpg", legenda: "Disfarçado" }, { url: "fachada.jpg", legenda: "Fachada" }], criado_em: em(dia(-120), "10:00") });
-    inserir("assinaturas", { barbearia_id: b.id, plano_id: planos[2].id, status: "ativa", vencimento: dia(22) });
-    inserir("pagamentos_assinatura", { barbearia_id: b.id, valor: 329, referencia: dia(-8).slice(0, 7), forma: "pix", pago_em: dia(-8) });
+    inserir("assinaturas", { barbearia_id: b.id, plano_id: planos[2].id, status: "ativa", vencimento: dia(22), fidelidade_ate: dia(245) });
+    inserir("pagamentos_assinatura", { barbearia_id: b.id, valor: 349, referencia: dia(-8).slice(0, 7), forma: "pix", pago_em: dia(-8) });
     const prof = inserir("profissionais", { barbearia_id: b.id, nome: "Gabriel Pires", ordem: 0 });
     inserir("membros", { barbearia_id: b.id, user_id: usuarios.dono.id, papel: "dono" });
     inserir("membros", { barbearia_id: b.id, user_id: usuarios.barbeiro.id, papel: "barbeiro", profissional_id: prof.id });

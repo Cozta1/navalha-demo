@@ -40,7 +40,7 @@
   .filtros input { max-width: 280px; }
   .filtros select { width: auto; }
   .secao { margin-top: 40px; }
-  .plano { display: grid; grid-template-columns: 1.4fr 1fr 1fr .8fr auto; gap: 10px; align-items: end; }
+  .plano { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; align-items: end; }
   @media (max-width: 760px) { .plano { grid-template-columns: 1fr 1fr; } }
   .plano-card { padding: 18px; }
   .checks { display: flex; flex-wrap: wrap; gap: 6px; }

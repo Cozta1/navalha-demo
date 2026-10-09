@@ -7,7 +7,7 @@
   const STATUS = { confirmado: "Confirmado", concluido: "Concluído", cancelado: "Cancelado", faltou: "Faltou" };
   let barb = null, servicos = [], profs = [], profServ = [];
   let papel = "dono", meuProf = null, assinatura = null, planosVenda = [];
-  const RECURSO = { marketing: "Marketing", estoque: "Estoque", relatorios_completos: "Relatórios completos", comissoes: "Comissões", emails: "E-mails automáticos" };
+  const RECURSO = { site: "Site próprio", marketing: "Marketing", estoque: "Estoque", relatorios_completos: "Relatórios completos", comissoes: "Comissões", emails: "E-mails automáticos" };
   // em teste ativo tudo liberado; depois, só o que o plano inclui
   const emTeste = () => assinatura?.status === "teste" && (!assinatura.teste_ate || assinatura.teste_ate >= hojeNoFuso(barb.fuso));
   const tem = r => emTeste() || !!assinatura?.planos?.recursos?.includes(r);
@@ -135,7 +135,7 @@
       papel = membros[0].papel; meuProf = membros[0].profissional_id;
       if (!ehDono()) filtroProf = meuProf;
       barb = await exec(sb.from("barbearias").select("*").eq("id", membros[0].barbearia_id).single());
-      assinatura = (await sb.from("assinaturas").select("*, planos(nome, max_profissionais, recursos, ajustes_mes)").eq("barbearia_id", barb.id).maybeSingle()).data;
+      assinatura = (await sb.from("assinaturas").select("*, planos(nome, preco_mensal, max_profissionais, profissionais_inclusos, preco_extra, fidelidade_meses, recursos, ajustes_mes)").eq("barbearia_id", barb.id).maybeSingle()).data;
       planosVenda = (await sb.from("planos").select("nome,preco_mensal,recursos").eq("ativo", true).order("preco_mensal")).data || [];
       await carregarCadastros();
     } catch { return; }
@@ -187,8 +187,7 @@
     { a: "servicos", ic: "✂️", t: "Serviços", g: "Configurações" },
     { a: "profissionais", ic: "👤", t: "Profissionais", g: "Configurações" },
     { a: "equipe", ic: "🔑", t: "Equipe", g: "Configurações" },
-    { a: "site", ic: "🌐", t: "Site", g: "Configurações" },
-    { a: "ajustes", ic: "🛠️", t: "Ajustes no site", g: "Configurações" },
+    { a: "ajustes", ic: "🌐", t: "Meu site", g: "Configurações", trava: "site" },
     { a: "config", ic: "⚙️", t: "Barbearia", g: "Configurações" },
   ];
   const visivel = i => i.todos || ehDono();
@@ -251,7 +250,7 @@
     document.title = `${rotulo(item)} · ${barb.nome}`;
     pararAgenda();
     window.scrollTo(0, 0);
-    (({ inicio: telaInicio, agenda: telaAgenda, servicos: telaServicos, clientes: telaClientes, avaliacoes: telaAvaliacoes, profissionais: telaProfissionais, caixa: telaCaixa, marketing: telaMarketing, estoque: telaEstoque, relatorios: telaRelatorios, config: telaConfig, equipe: telaEquipe, site: telaSite, ajustes: telaAjustes,
+    (({ inicio: telaInicio, agenda: telaAgenda, servicos: telaServicos, clientes: telaClientes, avaliacoes: telaAvaliacoes, profissionais: telaProfissionais, caixa: telaCaixa, marketing: telaMarketing, estoque: telaEstoque, relatorios: telaRelatorios, config: telaConfig, equipe: telaEquipe, ajustes: tem("site") ? telaAjustes : () => telaBloqueada("site"),
        marketing: tem("marketing") ? telaMarketing : () => telaBloqueada("marketing"),
        estoque: tem("estoque") ? telaEstoque : () => telaBloqueada("estoque") })[a] || telaAgenda)();
   }
@@ -1522,72 +1521,6 @@
     });
   }
 
-  // =================== Site da barbearia ===================
-  async function telaSite() {
-    const c = $("#conteudo");
-    let fotos = Array.isArray(barb.fotos) ? barb.fotos.map(f => ({ ...f })) : [];
-    const linkSite = new URL(`site.html?b=${barb.slug}`, location.href).href;
-    const render = () => {
-      c.innerHTML = `<div class="row space"><div><h2>Seu site</h2><p class="muted small">Preços, horários, equipe e avaliações vêm sozinhos do sistema. Aqui você ajusta textos, fotos e visual.</p></div>
-          <a class="btn btn-blue btn-sm" href="${linkSite}" target="_blank" rel="noopener">Ver site ↗</a></div>
-        <form class="card mt" id="fs">
-          <div class="grid2">
-            <div class="campo"><label>Tema</label><select name="tema"><option value="urbano" ${barb.tema === "urbano" ? "selected" : ""}>Urbano (escuro)</option><option value="classico" ${barb.tema === "classico" ? "selected" : ""}>Clássico (claro, serifado)</option></select></div>
-            <div class="campo"><label>Cor de destaque</label><input name="cor_destaque" type="color" value="${esc(barb.cor_destaque || "#2e6bff")}" style="height:46px;padding:4px"></div>
-          </div>
-          <div class="campo"><label>Título da capa (uma linha por linha do título, até 4)</label><textarea name="site_titulo" rows="3" maxlength="80" placeholder="Corte&#10;na régua,&#10;sem fila.">${esc(barb.site_titulo || "")}</textarea></div>
-          <div class="campo"><label>Texto de apresentação</label><textarea name="site_texto" rows="2" maxlength="400" placeholder="Barbearia tradicional com estilo moderno…">${esc(barb.site_texto || "")}</textarea></div>
-          <div class="grid2">
-            <div class="campo"><label>Instagram (sem @)</label><input name="instagram" maxlength="30" pattern="[A-Za-z0-9._]{1,30}" value="${esc(barb.instagram || "")}"></div>
-            <div class="campo"><label>Link do Google Maps (opcional)</label><input name="maps_url" maxlength="500" value="${esc(barb.maps_url || "")}" placeholder="https://maps.app.goo.gl/…"></div>
-          </div>
-          <div class="campo"><label>Domínio próprio (opcional)</label><input name="dominio" maxlength="100" pattern="[a-z0-9.\\-]{4,100}" value="${esc(barb.dominio || "")}" placeholder="minhabarbearia.com.br">
-            <p class="muted small" style="margin-top:4px">Depois de salvar, fale com o suporte para apontar o domínio.</p></div>
-
-          <h3 class="mt">Foto da capa</h3>
-          <div class="capa-box">${barb.hero_url ? `<img src="${esc(barb.hero_url)}" alt="">` : `<span class="muted small">Sem capa: usamos a primeira foto da galeria.</span>`}
-            <div class="row"><label class="btn btn-ghost btn-sm" style="margin:0">${barb.hero_url ? "Trocar" : "Enviar"} capa<input type="file" accept="image/*" id="capa-arq" hidden></label>
-            ${barb.hero_url ? `<button type="button" class="btn btn-ghost btn-sm" id="capa-tirar">Remover</button>` : ""}</div></div>
-
-          <h3 class="mt">Galeria (${fotos.length}/24)</h3>
-          <div class="galeria-ed">${fotos.map((f, i) => `<div class="foto-ed"><img src="${esc(f.url)}" alt="">
-            <input data-leg="${i}" maxlength="40" placeholder="Legenda" value="${esc(f.legenda || "")}">
-            <div class="row"><button type="button" class="x" data-sobe="${i}" title="Mover para antes">↑</button><button type="button" class="x" data-desce="${i}" title="Mover para depois">↓</button><button type="button" class="x" data-tira="${i}" title="Remover">×</button></div></div>`).join("")}
-            ${fotos.length < 24 ? `<label class="foto-ed add">+ Adicionar fotos<input type="file" accept="image/*" multiple id="fotos-arq" hidden></label>` : ""}</div>
-          <p class="muted small" id="up-status"></p>
-          <div class="row mt" style="justify-content:flex-end"><button class="btn btn-blue">Salvar site</button></div>
-        </form>`;
-      const lerLegendas = () => $$("[data-leg]").forEach(inp => { fotos[inp.dataset.leg].legenda = inp.value.trim(); });
-      $$("[data-sobe]").forEach(b => b.onclick = () => { lerLegendas(); const i = +b.dataset.sobe; if (i > 0) [fotos[i - 1], fotos[i]] = [fotos[i], fotos[i - 1]]; render(); });
-      $$("[data-desce]").forEach(b => b.onclick = () => { lerLegendas(); const i = +b.dataset.desce; if (i < fotos.length - 1) [fotos[i + 1], fotos[i]] = [fotos[i], fotos[i + 1]]; render(); });
-      $$("[data-tira]").forEach(b => b.onclick = () => { lerLegendas(); fotos.splice(+b.dataset.tira, 1); render(); });
-      $("#fotos-arq")?.addEventListener("change", async e => {
-        lerLegendas();
-        const arqs = [...e.target.files].slice(0, 24 - fotos.length);
-        for (const [k, f] of arqs.entries()) {
-          $("#up-status").textContent = `Enviando ${k + 1} de ${arqs.length}…`;
-          try { fotos.push({ url: await enviarImagem(f), legenda: "" }); } catch (er) { toast(msgErro(er), "erro"); }
-        }
-        render(); toast("Fotos enviadas. Clique em Salvar site.");
-      });
-      $("#capa-arq").onchange = async e => {
-        const f = e.target.files[0]; if (!f) return;
-        try { toast("Enviando capa…"); lerLegendas(); barb.hero_url = await enviarImagem(f, 2000); render(); toast("Capa enviada. Clique em Salvar site."); } catch (er) { toast(msgErro(er), "erro"); }
-      };
-      $("#capa-tirar")?.addEventListener("click", () => { lerLegendas(); barb.hero_url = null; render(); });
-      $("#fs").onsubmit = async ev => {
-        ev.preventDefault(); lerLegendas();
-        const d = Object.fromEntries(new FormData(ev.target));
-        const reg = { tema: d.tema, cor_destaque: d.cor_destaque, site_titulo: d.site_titulo.trim() || null, site_texto: d.site_texto.trim() || null,
-          instagram: d.instagram.trim().replace(/^@/, "") || null, maps_url: d.maps_url.trim() || null,
-          dominio: d.dominio.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "") || null,
-          hero_url: barb.hero_url || null, fotos };
-        try { barb = await exec(sb.from("barbearias").update(reg).eq("id", barb.id).select().single(), "Site salvo."); aplicarTema(barb); render(); } catch {}
-      };
-    };
-    render();
-  }
-
   // =================== Recursos do plano ===================
   function bloqueio(recurso, texto) {
     const pl = planoMinimo(recurso);
@@ -1601,11 +1534,12 @@
     const TXT = {
       marketing: "Promoções automáticas nos horários vazios, cupons de desconto, pacotes e assinaturas de corte, e a lista de clientes sumidos e aniversariantes com mensagem pronta no WhatsApp.",
       estoque: "Cadastro de produtos com custo e preço, entrada de mercadoria, baixa automática na venda e alerta quando o estoque acaba.",
+      site: "Um site com a sua cara e o seu domínio .com.br: fotos, preços, horários, equipe, avaliações e o botão de agendar. A gente monta e faz os ajustes para você todo mês.",
     };
     $("#conteudo").innerHTML = bloqueio(recurso, TXT[recurso]);
   }
 
-  // =================== Pedidos de ajuste no site ===================
+  // =================== Meu site: a equipe faz as mudanças; o dono pede (cota por mês) ===================
   async function telaAjustes() {
     const c = $("#conteudo");
     c.innerHTML = `<p class="carregando">Carregando…</p>`;
@@ -1618,8 +1552,10 @@
     } catch { return; }
     const resta = Math.max(0, cota.limite - cota.usados);
     const ST = { aberto: ["Recebido", "confirmado"], em_andamento: ["Em andamento", "faltou"], feito: ["Feito", "concluido"], recusado: ["Recusado", "cancelado"] };
-    c.innerHTML = `<div class="row space"><div><h2>Ajustes no site</h2><p class="muted small">Peça para a gente trocar fotos, textos, banners ou o que precisar no seu site.</p></div>
-        <div class="card cota"><span class="muted small">Este mês</span><b>${resta} de ${cota.limite}</b><span class="muted small">pedido${cota.limite === 1 ? "" : "s"} restante${resta === 1 ? "" : "s"}</span></div></div>
+    const linkSite = new URL(`site.html?b=${barb.slug}`, location.href).href;
+    c.innerHTML = `<div class="row space"><div><h2>Meu site</h2><p class="muted small">Seu site é montado e mantido pela nossa equipe. Preços, horários, equipe e avaliações atualizam sozinhos; para trocar fotos, textos ou banners, é só pedir aqui.</p></div>
+        <a class="btn btn-ghost btn-sm" href="${linkSite}" target="_blank" rel="noopener">Ver meu site ↗</a></div>
+      <div class="card cota mt"><span class="muted small">Ajustes deste mês</span><b>${resta} de ${cota.limite}</b><span class="muted small">pedido${cota.limite === 1 ? "" : "s"} restante${resta === 1 ? "" : "s"}</span></div>
       ${resta ? `<form class="card mt" id="fa"><h3>Novo pedido</h3>
           <div class="campo mt"><label>O que você quer mudar?</label><input id="aj-t" required minlength="3" maxlength="80" placeholder="Ex.: trocar a foto da capa"></div>
           <div class="campo"><label>Detalhes</label><textarea id="aj-d" required minlength="3" maxlength="2000" rows="4" placeholder="Explique o que deve mudar. Fotos novas: mande pelo WhatsApp do suporte e diga aqui."></textarea></div>
@@ -1636,11 +1572,27 @@
     });
   }
 
+  // Plano atual e quanto custa com a equipe de hoje (R$ extra por profissional além dos inclusos)
+  function cardPlano() {
+    const pl = assinatura?.planos;
+    if (!pl) return emTeste() ? `<div class="card"><h2>Seu plano</h2><p class="muted small">Teste grátis com tudo liberado. Escolha o plano até o fim do teste.</p></div>` : "";
+    const ativos = profs.filter(p => p.ativo).length, extras = Math.max(0, ativos - (pl.profissionais_inclusos || 1));
+    const total = Number(pl.preco_mensal) + extras * Number(pl.preco_extra ?? 20);
+    return `<div class="card"><h2>Plano ${esc(pl.nome)}</h2>
+      <p class="muted small">${pl.profissionais_inclusos} profissiona${pl.profissionais_inclusos > 1 ? "is" : "l"} incluso${pl.profissionais_inclusos > 1 ? "s" : ""} · ${dinheiro(pl.preco_extra ?? 20)}/mês por profissional a mais${pl.fidelidade_meses ? ` · fidelidade de ${pl.fidelidade_meses} meses${assinatura.fidelidade_ate ? ` (até ${assinatura.fidelidade_ate.split("-").reverse().join("/")})` : ""}` : ""}</p>
+      <div class="resumo-dia mt" style="margin-bottom:0">
+        <div class="card"><span class="muted small">Plano</span><b>${dinheiro(pl.preco_mensal)}</b></div>
+        <div class="card"><span class="muted small">Profissionais extras</span><b>${extras} <small>× ${dinheiro(pl.preco_extra ?? 20)}</small></b></div>
+        <div class="card"><span class="muted small">Mensalidade</span><b>${dinheiro(total)}</b></div>
+      </div></div>`;
+  }
+
   // =================== Configurações da barbearia ===================
   function telaConfig() {
     const c = $("#conteudo");
     c.innerHTML = `
-      <div class="card"><h2>Link de agendamento</h2>
+      ${cardPlano()}
+      <div class="card mt"><h2>Link de agendamento</h2>
         <p class="muted small" style="margin-bottom:10px">Coloque no Instagram, no Google e no seu site.</p>
         <div class="link-publico"><input readonly value="${esc(linkPublico())}" id="lnk"><button class="btn btn-blue btn-sm" id="copiar">Copiar</button></div></div>
       <form class="card mt" id="f"><h2>Dados da barbearia</h2>

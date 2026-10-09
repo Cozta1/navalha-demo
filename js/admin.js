@@ -5,7 +5,7 @@
   const app = $("#app");
   const ST = { teste: "Teste", ativa: "Ativa", atrasada: "Atrasada", suspensa: "Suspensa", cancelada: "Cancelada" };
   let lista = [], planos = [], pedidos = [], filtro = { texto: "", status: "" };
-  const RECURSOS = { relatorios_completos: "Relatórios completos", comissoes: "Comissões", marketing: "Marketing", estoque: "Estoque", emails: "E-mails" };
+  const RECURSOS = { site: "Site + domínio", relatorios_completos: "Relatórios completos", comissoes: "Comissões", marketing: "Marketing", estoque: "Estoque", emails: "E-mails" };
   const STP = { aberto: "Aberto", em_andamento: "Em andamento", feito: "Feito", recusado: "Recusado" };
   const exec = async (pr, ok) => { const { data, error } = await pr; if (error) { toast(msgErro(error), "erro"); throw error; } if (ok) toast(ok); return data; };
   const fmtData = d => d ? new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(String(d).slice(0, 10) + "T12:00:00Z")) : "—";
@@ -39,7 +39,7 @@
 
   function render() {
     const conta = st => lista.filter(x => x.status === st).length;
-    const mrr = lista.filter(x => ["ativa", "atrasada"].includes(x.status)).reduce((t, x) => t + Number(x.preco_mensal || 0), 0);
+    const mrr = lista.filter(x => ["ativa", "atrasada"].includes(x.status)).reduce((t, x) => t + Number(x.mensalidade ?? x.preco_mensal ?? 0), 0);
     const t = filtro.texto.toLowerCase();
     const vis = lista.filter(x => (!filtro.status || x.status === filtro.status) &&
       (!t || x.nome.toLowerCase().includes(t) || x.slug.includes(t) || (x.email_dono || "").toLowerCase().includes(t)));
@@ -58,7 +58,7 @@
       <div class="tabela mt"><div class="tr th"><span>Barbearia</span><span>Plano</span><span>Status</span><span>Vence / teste até</span><span>Agend. 30d</span><span>Equipe</span><span></span></div>
         ${vis.map(x => `<div class="tr">
           <span><b>${esc(x.nome)}</b><br><span class="muted small">${esc(x.email_dono || "")} · <a href="site.html?b=${encodeURIComponent(x.slug)}" target="_blank" rel="noopener">site</a>${x.whatsapp ? ` · <a href="${linkWhats(x.whatsapp)}" target="_blank" rel="noopener">whats</a>` : ""}</span></span>
-          <span>${esc(x.plano || "—")}${x.preco_mensal ? `<br><span class="mono small">${dinheiro(x.preco_mensal)}</span>` : ""}</span>
+          <span>${esc(x.plano || "—")}${x.preco_mensal ? `<br><span class="mono small">${dinheiro(x.mensalidade ?? x.preco_mensal)}</span>` : ""}</span>
           <span><span class="tag ${x.status || "suspensa"}">${ST[x.status] || "Sem assinatura"}</span>${x.agenda_ligada ? "" : '<br><span class="small" style="color:#fca5a5">agenda off</span>'}</span>
           <span class="small">${x.status === "teste" ? "teste até " + fmtData(x.teste_ate) : fmtData(x.vencimento)}${x.ultimo_pagamento ? `<br><span class="muted">pago ${fmtData(x.ultimo_pagamento)}</span>` : ""}</span>
           <span class="mono">${x.agendamentos_30d}</span><span class="mono">${x.profissionais}</span>
@@ -73,12 +73,15 @@
             <input name="resposta" maxlength="1000" value="${esc(x.resposta || "")}" placeholder="Resposta para o cliente" class="grow" style="width:auto">
             ${x.barbearias?.whatsapp ? `<a class="btn btn-green btn-sm" target="_blank" rel="noopener" href="${linkWhats(x.barbearias.whatsapp, `Olá! Sobre o ajuste no site "${x.titulo}":`)}">Whats</a>` : ""}
             <button class="btn btn-ghost btn-sm">Salvar</button></div></form>`).join("") : `<p class="muted small mt">Nenhum pedido.</p>`}</div>
-      <div class="secao"><h2>Planos</h2><p class="muted small">Aparecem na página inicial. Limite vazio = sem limite de profissionais.</p>
-        ${[...planos, { id: "", nome: "", preco_mensal: "", max_profissionais: null, ativo: true, recursos: [], ajustes_mes: 1, descricao: "" }].map(p => `<form class="card plano-card mt" data-plano="${p.id}">
+      <div class="secao"><h2>Planos</h2><p class="muted small">Aparecem na página inicial. Mensalidade = preço + extra por profissional ativo além dos inclusos. Limite vazio = sem limite.</p>
+        ${[...planos, { id: "", nome: "", preco_mensal: "", max_profissionais: null, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0, ativo: true, recursos: [], ajustes_mes: 1, descricao: "" }].map(p => `<form class="card plano-card mt" data-plano="${p.id}">
           <div class="plano">
             <div><label>${p.id ? "Nome" : "Novo plano"}</label><input name="nome" value="${esc(p.nome)}" required></div>
             <div><label>R$/mês</label><input name="preco_mensal" type="number" step="0.01" min="0" value="${p.preco_mensal}" required></div>
-            <div><label>Máx. profissionais</label><input name="max_profissionais" type="number" min="1" value="${p.max_profissionais ?? ""}" placeholder="ilimitado"></div>
+            <div><label>Inclusos</label><input name="profissionais_inclusos" type="number" min="1" max="100" value="${p.profissionais_inclusos ?? 1}"></div>
+            <div><label>R$ por extra</label><input name="preco_extra" type="number" step="0.01" min="0" value="${p.preco_extra ?? 20}"></div>
+            <div><label>Fidelidade (meses)</label><input name="fidelidade_meses" type="number" min="0" max="36" value="${p.fidelidade_meses ?? 0}"></div>
+            <div><label>Máx. profissionais</label><input name="max_profissionais" type="number" min="1" value="${p.max_profissionais ?? ""}" placeholder="sem limite"></div>
             <div><label>Ajustes/mês</label><input name="ajustes_mes" type="number" min="0" max="100" value="${p.ajustes_mes ?? 1}"></div>
             <label class="chk" style="margin:0"><input type="checkbox" name="ativo" ${p.ativo ? "checked" : ""}> à venda</label>
           </div>
@@ -99,6 +102,7 @@
       ev.preventDefault();
       const fd = new FormData(f), d = Object.fromEntries(fd);
       const reg = { nome: d.nome.trim(), preco_mensal: Number(d.preco_mensal), max_profissionais: d.max_profissionais ? Number(d.max_profissionais) : null, ativo: !!d.ativo,
+        profissionais_inclusos: Number(d.profissionais_inclusos) || 1, preco_extra: Number(d.preco_extra) || 0, fidelidade_meses: Number(d.fidelidade_meses) || 0,
         ajustes_mes: Number(d.ajustes_mes) || 0, recursos: fd.getAll("rec"), descricao: (d.descricao || "").trim() || null };
       try {
         if (f.dataset.plano) await exec(sb.from("planos").update(reg).eq("id", f.dataset.plano), "Plano salvo.");

@@ -14,6 +14,8 @@
 
   const { data: b, error } = await sb.from("barbearias").select("*").eq("slug", slug).maybeSingle();
   if (error || !b) return falha("Barbearia não encontrada.");
+  const { data: temSite } = await sb.rpc("plano_tem", { p_barbearia: b.id, p_recurso: "site" });
+  if (temSite === false) { location.replace(`agendar.html?b=${encodeURIComponent(b.slug)}`); return; }
   const [sv, pf, jo, pm, av, rs] = await Promise.all([
     sb.from("servicos").select("*").eq("barbearia_id", b.id).eq("ativo", true).order("ordem").order("nome"),
     sb.from("profissionais").select("*").eq("barbearia_id", b.id).eq("ativo", true).order("ordem").order("nome"),

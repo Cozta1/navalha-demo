@@ -58,23 +58,25 @@
 
   // planos: do banco quando configurado; senão, a tabela padrão
   let planos = [
-    { nome: "Essencial", preco_mensal: 149, max_profissionais: 2, ajustes_mes: 1, recursos: [], descricao: "Site próprio com domínio, agenda online e caixa para até 2 profissionais." },
-    { nome: "Profissional", preco_mensal: 229, max_profissionais: 6, ajustes_mes: 3, recursos: ["relatorios_completos", "comissoes", "marketing", "emails"], descricao: "Tudo do Essencial + comissões, marketing, e-mails automáticos e relatórios completos." },
-    { nome: "Premium", preco_mensal: 329, max_profissionais: null, ajustes_mes: 6, recursos: ["relatorios_completos", "comissoes", "estoque", "marketing", "emails"], descricao: "Tudo do Profissional + estoque, equipe ilimitada e atendimento prioritário." },
+    { nome: "Básico", preco_mensal: 89, profissionais_inclusos: 1, preco_extra: 20, fidelidade_meses: 0, ajustes_mes: 0, recursos: [], descricao: "Agenda online 24h, página de agendamento, conta do cliente, avaliações e caixa." },
+    { nome: "Profissional", preco_mensal: 249, profissionais_inclusos: 2, preco_extra: 20, fidelidade_meses: 12, ajustes_mes: 2, recursos: ["site", "relatorios_completos", "comissoes", "emails"], descricao: "Tudo do Básico + site próprio com domínio, relatórios completos e comissões." },
+    { nome: "Premium", preco_mensal: 349, profissionais_inclusos: 4, preco_extra: 20, fidelidade_meses: 12, ajustes_mes: 5, recursos: ["site", "relatorios_completos", "comissoes", "emails", "marketing", "estoque"], descricao: "Tudo do Profissional + promoções por horário, cupons, pacotes, marketing e estoque." },
   ];
   if (configurado) {
     const { data } = await sb.from("planos").select("*").eq("ativo", true).order("ordem").order("preco_mensal");
     if (data?.length) planos = data;
   }
   const destaque = planos.length >= 3 ? planos[Math.floor(planos.length / 2)].nome : null;
-  const BASE = ["Site próprio + domínio", "Agenda online 24h", "Conta do cliente e avaliações", "Caixa e comandas"];
-  const EXTRAS = [["relatorios_completos", "Relatórios completos"], ["comissoes", "Comissão por barbeiro"], ["marketing", "Promoções, cupons e pacotes"], ["emails", "E-mails automáticos"], ["estoque", "Estoque de produtos"]];
+  const BASE = ["Agenda online 24h", "Página de agendamento com seu link", "Conta do cliente e avaliações", "Caixa e comandas"];
+  const EXTRAS = [["site", "Site próprio + domínio .com.br"], ["relatorios_completos", "Relatórios completos"], ["comissoes", "Comissão por profissional"], ["marketing", "Promoções, cupons e pacotes"], ["estoque", "Estoque de produtos"]];
+  const inclusos = n => `${n} profissiona${n > 1 ? "is" : "l"} incluso${n > 1 ? "s" : ""}`;
   $("#lista-planos").innerHTML = planos.map((p, k) => `<div class="plano revela atraso-${k + 1} ${p.nome === destaque ? "destaque" : ""}">
       ${p.nome === destaque ? `<span class="selo">Mais escolhido</span>` : ""}
       <h3>${esc(p.nome)}</h3><p class="desc">${esc(p.descricao || "")}</p>
       <div class="preco">${dinheiro(p.preco_mensal).replace(",00", "")}<small> /mês</small></div>
-      <ul><li>${p.max_profissionais ? `Até ${p.max_profissionais} profissiona${p.max_profissionais > 1 ? "is" : "l"}` : "Profissionais ilimitados"}</li>
-        <li>${p.ajustes_mes} ajuste${p.ajustes_mes === 1 ? "" : "s"} no site por mês</li>
+      <p class="extra">+ ${dinheiro(p.preco_extra ?? 20).replace(",00", "")}/mês por profissional a mais${p.fidelidade_meses ? ` · fidelidade de ${p.fidelidade_meses} meses, pago mês a mês` : " · sem fidelidade"}</p>
+      <ul><li>${inclusos(p.profissionais_inclusos || 1)}</li>
+        ${p.ajustes_mes ? `<li>${p.ajustes_mes} ajuste${p.ajustes_mes === 1 ? "" : "s"} no site por mês</li>` : ""}
         ${BASE.map(t => `<li>${t}</li>`).join("")}
         ${EXTRAS.map(([r, t]) => `<li class="${(p.recursos || []).includes(r) ? "" : "nao"}">${t}</li>`).join("")}</ul>
       <a class="btn ${p.nome === destaque ? "btn-cobre" : ""}" href="painel.html">Testar grátis</a></div>`).join("");
