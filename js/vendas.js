@@ -83,12 +83,16 @@
     if (cfg.fonte && !fontes[seg]) { fontes[seg] = true; document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${cfg.fonte}&display=swap">`); }
     $$("[data-k]").forEach(el => { el.innerHTML = cfg[el.dataset.k] ?? original[el.dataset.k]; });
     i = 0; quebra(h1);
-    $$(".segmentos [data-seg]").forEach(b => b.setAttribute("aria-selected", b.dataset.seg === seg));
+    const exemplo = seg || "barbearia"; // a versão geral mostra a barbearia no celular
+    $$(".seletor-area [data-seg]").forEach(b => b.setAttribute("aria-selected", b.dataset.seg === exemplo));
     $("#faixa").innerHTML = [...cfg.faixa, ...cfg.faixa].map(t => `<span>${t}</span>`).join("");
     const prints = PRINTS[seg];
     $$("img[data-img]").forEach(el => { const de = prints ? prints[el.dataset.img] : seg; el.onerror = () => { el.onerror = null; el.src = el.dataset.padrao; }; el.src = de ? `img/seg/${de}-${el.dataset.img}.webp` : el.dataset.padrao; });
     const [slug, conta] = EXEMPLO[cfg.ex];
     $("#demo-site").href = `${demo}site.html?b=${slug}`;
+    const [slugVivo] = EXEMPLO[exemplo], vivo = $("#site-vivo"), urlVivo = `${demo}site.html?b=${slugVivo}`;
+    if (vivo && vivo.dataset.url !== urlVivo) { vivo.dataset.url = urlVivo; vivo.src = `${urlVivo}&limpo=1`; }
+    $("#site-vivo-abrir").href = urlVivo;
     $("#demo-agendar").href = `${demo}agendar.html?b=${slug}`;
     $("#demo-painel").href = `${demo}painel.html?como=${conta}`;
     const url = new URL(location.href);
@@ -120,7 +124,7 @@
   // demonstração e contato
   const demo = (cfg.demoUrl || "demo/").replace(/\/?$/, "/");
   aplicarSegmento(new URLSearchParams(location.search).get("seg") || "");
-  $$(".segmentos [data-seg], [data-ir-seg]").forEach(b => b.addEventListener("click", e => {
+  $$(".seletor-area [data-seg], [data-ir-seg]").forEach(b => b.addEventListener("click", e => {
     e.preventDefault();
     aplicarSegmento(b.dataset.seg ?? b.dataset.irSeg);
     if (b.dataset.irSeg) scrollTo({ top: 0, behavior: "smooth" });

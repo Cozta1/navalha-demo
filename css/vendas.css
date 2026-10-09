@@ -216,15 +216,18 @@ html, body { overflow-x: clip; }
 /* =====================================================================
    Áreas: barra de escolha no topo, cards "Para quem é" e um visual por área
    ===================================================================== */
-.segmentos { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
-.segmentos .wrap { height: auto; display: flex; gap: 6px; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; padding-top: 8px; padding-bottom: 8px; }
-.segmentos .wrap::-webkit-scrollbar { display: none; }
-.segmentos button { flex: none; border: 1px solid var(--line); background: color-mix(in srgb, var(--card) 70%, transparent); color: var(--muted); font: 600 .85rem var(--sans);
-  padding: 7px 14px; border-radius: 999px; cursor: pointer; transition: color .2s, border-color .2s, background .2s; white-space: nowrap; }
-.segmentos button:hover { color: var(--text); }
-.segmentos button[aria-selected="true"] { background: var(--metal); color: var(--sobre-metal, #1e1009); border-color: transparent; }
-.hero { padding-top: 190px; }
-@media (max-width: 980px) { .hero { padding-top: 160px; } }
+.seletor-area { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 26px; }
+.dica-seletor { width: 100%; font-size: .9rem; color: var(--muted); margin-bottom: 2px; }
+.seletor-area button { border: 1px solid var(--line); background: var(--card); color: var(--muted); font: 600 .9rem var(--sans);
+  padding: 9px 16px; border-radius: 999px; cursor: pointer; transition: color .2s, border-color .2s, background .2s, transform .2s; }
+.seletor-area button:hover { color: var(--text); border-color: var(--cobre-2); transform: translateY(-1px); }
+.seletor-area button[aria-selected="true"] { background: var(--metal); color: var(--sobre-metal, #1e1009); border-color: transparent; }
+/* celular com o site de exemplo ao vivo (iframe em 390px, reduzido para caber na moldura) */
+.rec-img .moldura.cel-vivo { width: 300px; max-width: 100%; aspect-ratio: 9 / 18.5; overflow: hidden; position: relative; }
+.cel-vivo iframe { position: absolute; top: 9px; left: 9px; width: 390px; height: calc((100% - 18px) * 390 / 282); border: 0; border-radius: 24px;
+  transform: scale(calc(282 / 390)); transform-origin: top left; background: #111; }
+.legenda-vivo { text-align: center; color: var(--muted); font-size: .88rem; margin-top: 14px; }
+.legenda-vivo a { color: var(--cobre-txt); text-decoration: underline; text-underline-offset: 3px; }
 
 .areas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 40px; }
 @media (max-width: 980px) { .areas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -294,12 +297,6 @@ footer a:hover { color: var(--text); }
 :root[data-seg="cilios"] .btn { border-radius: 0; letter-spacing: .14em; text-transform: uppercase; font-size: .8rem; }
 :root[data-seg="cilios"] .btn-cobre { color: #f3eee8; box-shadow: none; }
 :root[data-seg="cilios"] .btn-cobre::after { display: none; }
-:root[data-seg="cilios"] .segmentos button { border-radius: 0; }
+:root[data-seg="cilios"] .seletor-area button { border-radius: 0; }
 :root[data-seg="cilios"] .passo .n { font-weight: 400; }
 
-/* celular: as áreas quebram em duas linhas em vez de passar da tela */
-@media (max-width: 700px) {
-  .segmentos .wrap { flex-wrap: wrap; justify-content: center; overflow: visible; gap: 6px; }
-  .segmentos button { padding: 6px 11px; font-size: .8rem; }
-  .hero { padding-top: 200px; }
-}

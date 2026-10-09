@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vendas.css">
+<link rel="stylesheet" href="css/vendas.css?v=202610091305">
 </head>
 <body>
 
@@ -22,10 +22,7 @@
     marcaí</a>
   <nav class="menu"><a class="ln" href="#areas">Para quem é</a><a class="ln" href="#recursos">Recursos</a><a class="ln" href="#planos">Planos</a><a class="ln" href="#duvidas">Dúvidas</a></nav>
   <div class="topo-acoes"><span id="tema"></span><a class="btn btn-sm so-desk" href="painel.html">Entrar</a><a class="btn btn-cobre btn-sm" href="painel.html">Testar grátis</a></div>
-</div>
-<div class="segmentos" role="tablist" aria-label="Escolha sua área"><div class="wrap">
-  <button role="tab" data-seg="">Todas as áreas</button><button role="tab" data-seg="barbearia">Barbearia</button><button role="tab" data-seg="salao">Salão</button><button role="tab" data-seg="unhas">Unhas</button><button role="tab" data-seg="cilios">Sobrancelhas e cílios</button>
-</div></div></header>
+</div></header>
 
 <main>
   <section class="hero"><div class="wrap grade">
@@ -71,8 +68,13 @@
     <div class="recurso">
       <div class="revela esq"><span class="rotulo">Site próprio · planos Profissional e Premium</span><h3 data-k="siteTitulo">Seu negócio com <em>cara de marca</em>, não de perfil genérico.</h3>
         <p class="lead">Um site bonito de verdade, com preços, fotos, equipe, avaliações e mapa. Preços, horários e equipe atualizam sozinhos quando você muda algo no painel.</p>
-        <ul><li>Seu domínio .com.br</li><li>Estilo e cores pensados para a sua área</li><li>Ajustes inclusos todo mês: é só pedir no painel</li></ul></div>
-      <div class="rec-img revela dir"><div class="moldura cel-m"><img data-img="site" src="img/tela-site.webp" alt="Site no celular" loading="lazy"></div></div>
+        <ul><li>Seu domínio .com.br</li><li>Estilo e cores pensados para a sua área</li><li>Ajustes inclusos todo mês: é só pedir no painel</li></ul>
+        <div class="seletor-area" role="tablist" aria-label="Veja um site de exemplo de cada área">
+          <span class="dica-seletor">Veja um exemplo de cada área:</span>
+          <button role="tab" data-seg="barbearia">Barbearia</button><button role="tab" data-seg="salao">Salão</button><button role="tab" data-seg="unhas">Unhas</button><button role="tab" data-seg="cilios">Sobrancelhas e cílios</button>
+        </div></div>
+      <div class="rec-img revela dir"><div class="moldura cel-m cel-vivo"><iframe id="site-vivo" title="Site de exemplo" loading="lazy"></iframe></div>
+        <p class="legenda-vivo">Site de exemplo funcionando: role e toque à vontade. <a id="site-vivo-abrir" href="#" target="_blank" rel="noopener">Abrir em tela cheia ↗</a></p></div>
     </div>
     <div class="recurso inv">
       <div class="revela dir"><span class="rotulo">Agenda online 24h</span><h3>Horário marcado enquanto você <em>tá atendendo</em>.</h3>
@@ -138,8 +140,8 @@
 <footer><div class="wrap"><span class="logo" style="font-size:1.2rem">marcaí</span>
   <span><a href="termos.html">Termos de Uso</a> · <a href="privacidade.html">Privacidade</a> · © <span id="ano"></span> Marcaí</span></div></footer>
 
-<script src="js/banco-local.js"></script>
-<script src="js/comum.js"></script>
-<script src="js/vendas.js"></script>
+<script src="js/banco-local.js?v=202610091305"></script>
+<script src="js/comum.js?v=202610091305"></script>
+<script src="js/vendas.js?v=202610091305"></script>
 </body>
 </html>
