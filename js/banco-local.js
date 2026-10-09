@@ -117,7 +117,7 @@
       profissional_servicos: { preco: null, duracao_min: null },
       bloqueios: { motivo: null },
       clientes: { email: null, nascimento: null, observacoes: null, ultimo_contato: null, criado_em: agora },
-      agendamentos: { cliente_id: null, status: "confirmado", origem: "online", observacao: null, codigo: uuid(), user_id: null, cancelado_por: null, reagendado_em: null,
+      agendamentos: { cliente_id: null, status: "confirmado", origem: "online", observacao: null, codigo: uuid(), user_id: null, cancelado_por: null, motivo_cancelamento: null, reagendado_em: null,
         cupom_id: null, desconto_cupom: 0, criado_em: agora },
       agendamento_itens: { preco_cheio: null, promocao: null, ordem: 0 },
       lista_espera: { cliente_id: null, servico_id: null, profissional_id: null, periodo: "qualquer", status: "aguardando", criado_em: agora },
@@ -457,6 +457,7 @@
         servicos: T("agendamento_itens").filter(i => i.agendamento_id === a.id).sort((x, y) => x.ordem - y.ordem)
           .map(i => ({ id: i.servico_id, nome: i.nome, preco: i.preco, preco_cheio: i.preco_cheio, promocao: i.promocao, duracao_min: i.duracao_min })),
         profissional: p?.nome, profissional_id: p?.id, cliente: a.cliente_nome, inicio: a.inicio, fim: a.fim, status: a.status,
+        cancelado_por: a.cancelado_por, motivo_cancelamento: a.motivo_cancelamento,
         pode_alterar: a.status === "confirmado" && Date.now() < prazo,
         pode_avaliar: a.status === "concluido" && Date.parse(a.inicio) > Date.now() - 30 * 86400000 && !v,
         avaliacao: v ? { nota: v.nota, comentario: v.comentario, resposta: v.resposta } : null,
@@ -464,10 +465,10 @@
       };
     },
 
-    cancelar_agendamento({ p_codigo }) {
+    cancelar_agendamento({ p_codigo, p_motivo = null }) {
       const a = T("agendamentos").find(x => x.codigo === p_codigo);
       if (!a || a.status !== "confirmado" || Date.parse(a.inicio) <= Date.now() + barbearia(a.barbearia_id).cancelamento_horas * 3600000) return false;
-      atualizar("agendamentos", a, { status: "cancelado", cancelado_por: "cliente" });
+      atualizar("agendamentos", a, { status: "cancelado", cancelado_por: "cliente", motivo_cancelamento: String(p_motivo || "").trim().slice(0, 200) || null });
       return true;
     },
 

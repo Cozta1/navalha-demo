@@ -428,8 +428,8 @@
   function ligarAcoes(raiz, ags, aoAgir = () => {}) {
     $$("[data-st]", raiz).forEach(b => b.onclick = async () => {
       const { id, st } = b.dataset;
-      if (st === "cancelado" && !confirm("Cancelar este agendamento? O horário volta a ficar livre.")) return;
-      const extra = st === "cancelado" ? { cancelado_por: "barbearia" } : st === "confirmado" ? { cancelado_por: null } : {};
+      if (st === "cancelado") return modalCancelar(ags.find(a => a.id === id), aoAgir);
+      const extra = st === "confirmado" ? { cancelado_por: null, motivo_cancelamento: null } : {};
       await exec(sb.from("agendamentos").update({ status: st, ...extra }).eq("id", id), `Marcado como ${STATUS[st].toLowerCase()}.`).catch(() => {});
       aoAgir(); carregarAgenda(true);
     });
@@ -443,6 +443,44 @@
       await exec(sb.from("bloqueios").delete().eq("id", b.dataset.delbloq), "Bloqueio removido.").catch(() => {});
       aoAgir(); carregarAgenda(true);
     });
+  }
+
+  // Cancelar pelo painel: justificativa opcional e aviso pronto no WhatsApp do cliente
+  function modalCancelar(a, aoAgir = () => {}) {
+    if (!a) return;
+    const quando = `${fmtDataLonga(a.inicio, barb.fuso)} às ${fmtHora(a.inicio, barb.fuso)}`;
+    const m = document.createElement("div");
+    m.className = "modal";
+    m.innerHTML = `<div class="card"><form>
+      <h2>Cancelar horário</h2>
+      <p class="muted small" style="margin:4px 0 16px">${esc(a.cliente_nome)} · ${esc(a.servico_nome)} · ${esc(quando)}. O horário volta a ficar livre.</p>
+      <div class="campo"><label>Justificativa (opcional)</label>
+        <textarea id="c-motivo" rows="3" maxlength="200" placeholder="Ex.: o profissional ficou doente. Podemos remarcar para amanhã?"></textarea></div>
+      <label class="aceite"><input type="checkbox" id="c-avisar" checked> <span>Avisar ${esc(a.cliente_nome.split(" ")[0])} no WhatsApp</span></label>
+      <div class="row mt" style="justify-content:flex-end"><button type="button" class="btn btn-ghost" data-fechar>Voltar</button><button class="btn btn-red">Cancelar horário</button></div>
+      <p class="erro hidden"></p></form></div>`;
+    const fechar = () => m.remove();
+    m.addEventListener("click", e => { if (e.target === m || e.target.hasAttribute("data-fechar")) fechar(); });
+    $("form", m).onsubmit = async ev => {
+      ev.preventDefault();
+      const motivo = $("#c-motivo", m).value.trim(), avisar = $("#c-avisar", m).checked;
+      const msg = `Olá, ${a.cliente_nome.split(" ")[0]}! Seu horário na ${barb.nome} de ${quando} (${a.servico_nome}) foi cancelado.`
+        + (motivo ? ` Motivo: ${motivo}` + (/[.!?]$/.test(motivo) ? "" : ".") : "")
+        + ` Desculpe o transtorno. Se quiser, marque outro horário aqui: ${linkPublico()}`;
+      // a janela abre já no clique (senão o navegador bloqueia) e recebe o link depois de cancelar
+      const janela = avisar ? window.open("", "_blank") : null;
+      const btn = $("button.btn-red", m); btn.disabled = true;
+      try {
+        await exec(sb.from("agendamentos").update({ status: "cancelado", cancelado_por: "barbearia", motivo_cancelamento: motivo || null }).eq("id", a.id), "Horário cancelado.");
+        if (janela) janela.location.href = linkWhats(a.cliente_telefone, msg);
+        fechar(); aoAgir(); carregarAgenda(true);
+      } catch (e) {
+        janela?.close();
+        const er = $(".erro", m); er.textContent = msgErro(e); er.classList.remove("hidden"); btn.disabled = false;
+      }
+    };
+    document.body.appendChild(m);
+    $("#c-motivo", m).focus();
   }
 
   // ---------- "Agora" e "Próximo" (só no dia de hoje) ----------
@@ -565,7 +603,7 @@
       <div class="h">${fmtHora(a.inicio, barb.fuso)}<small>até ${fmtHora(a.fim, barb.fuso)}</small></div>
       <div>
         <b>${esc(a.cliente_nome)}</b> <span class="tag ${a.status}">${STATUS[a.status]}</span>
-        <div class="muted small">${esc(a.servico_nome)} · ${dinheiro(a.preco)}${profs.length > 1 ? ` · ${esc(prof)}` : ""}${a.origem === "painel" ? " · encaixe" : ""}${a.reagendado_em ? " · reagendado" : ""}${Number(a.desconto_cupom) ? ` · 🏷️ cupom −${dinheiro(a.desconto_cupom)}` : ""}${a.status === "cancelado" && a.cancelado_por ? ` · pelo ${a.cancelado_por === "cliente" ? "cliente" : "salão"}` : ""}</div>
+        <div class="muted small">${esc(a.servico_nome)} · ${dinheiro(a.preco)}${profs.length > 1 ? ` · ${esc(prof)}` : ""}${a.origem === "painel" ? " · encaixe" : ""}${a.reagendado_em ? " · reagendado" : ""}${Number(a.desconto_cupom) ? ` · 🏷️ cupom −${dinheiro(a.desconto_cupom)}` : ""}${a.status === "cancelado" && a.cancelado_por ? ` · pelo ${a.cancelado_por === "cliente" ? "cliente" : "estabelecimento"}` : ""}${a.status === "cancelado" && a.motivo_cancelamento ? ` · “${esc(a.motivo_cancelamento)}”` : ""}</div>
         <div class="small"><a href="${linkWhats(a.cliente_telefone)}" target="_blank" rel="noopener">${esc(fmtTelefone(a.cliente_telefone))}</a></div>
         ${a.observacao ? `<div class="muted small">📝 ${esc(a.observacao)}</div>` : ""}
       </div>
