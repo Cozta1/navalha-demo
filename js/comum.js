@@ -134,7 +134,8 @@ function aplicarTema(barb) {
 }
 
 // ---------- tema claro/escuro (telas do cliente e página de vendas) ----------
-const temaAtual = () => document.documentElement.dataset.tema
+// data-tema = escolha da pessoa; data-tema-padrao = modo natural da página (ex.: versões claras da página inicial)
+const temaAtual = () => document.documentElement.dataset.tema || document.documentElement.dataset.temaPadrao
   || (matchMedia("(prefers-color-scheme: light)").matches ? "claro" : "escuro");
 function botaoTema() {
   const b = document.createElement("button");
@@ -153,6 +154,7 @@ function botaoTema() {
     pinta();
   };
   pinta();
+  b.pinta = pinta;
   return b;
 }
 

@@ -54,11 +54,21 @@
   };
   if (FONTES[b.tema]) document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${FONTES[b.tema]}&display=swap">`);
   if (b.tema && b.tema !== "urbano") document.body.classList.add(b.tema);
+  const modoNatural = b.tema && b.tema !== "urbano" ? "claro" : "escuro";
+  const CORES_TOPO = { urbano: ["#0b0b0c", "#f1ede6"], classico: ["#15130f", "#f2ece0"], elegante: ["#1b1317", "#f7f0ec"], doce: ["#1c0f17", "#fff4f7"], minimal: ["#151210", "#f3eee8"] };
+  const aplicarModo = () => {
+    const modo = guarda.ler("navalha_tema", null) || modoNatural;
+    document.body.classList.toggle("modo-claro", modo === "claro");
+    document.body.classList.toggle("modo-escuro", modo === "escuro");
+    $('meta[name="theme-color"]').content = (CORES_TOPO[b.tema] || CORES_TOPO.urbano)[modo === "claro" ? 1 : 0];
+    const bt = $("#modo"); if (bt) { bt.textContent = modo === "claro" ? "☾" : "☀"; bt.title = bt.ariaLabel = modo === "claro" ? "Usar modo escuro" : "Usar modo claro"; }
+  };
+  aplicarModo();
+  addEventListener("storage", e => { if (e.key === "navalha_tema") aplicarModo(); }); // página inicial trocou o modo
   document.documentElement.style.setProperty("--azul", b.cor_destaque || "#2e6bff");
   document.documentElement.style.setProperty("--icone", `"${tx.icone}"`);
   document.title = `${b.nome}${b.endereco ? " · " + b.endereco.split(",").slice(-2).join(",").trim() : ""}`;
   $('meta[name="description"]').content = (b.site_texto || `${b.nome}: agende seu horário online.`).slice(0, 160);
-  $('meta[name="theme-color"]').content = { classico: "#f2ece0", elegante: "#f7f0ec", doce: "#fff4f7", minimal: "#f3eee8" }[b.tema] || "#0b0b0c";
   if (b.logo_url) document.head.insertAdjacentHTML("beforeend", `<link rel="icon" href="${esc(b.logo_url)}">`);
 
   // ---------- dados derivados ----------
@@ -100,6 +110,7 @@
       ${fotos.length ? `<a class="link" href="#trabalhos">Trabalhos</a>` : ""}
       ${depoimentos.length ? `<a class="link" href="#avaliacoes">Avaliações</a>` : ""}
       <a class="link" href="#local">Local</a>
+      <button class="modo" id="modo" type="button"></button>
       <a class="btn btn-azul" href="${agendar}">Agendar</a>
     </nav></div></header>
 
@@ -213,6 +224,9 @@
     $("#prox").onclick = () => { mostra(i + 1); auto(); };
     mostra(0); auto();
   }
+
+  aplicarModo();
+  $("#modo").onclick = () => { guarda.gravar("navalha_tema", document.body.classList.contains("modo-claro") ? "escuro" : "claro"); aplicarModo(); };
 
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("on"); io.unobserve(e.target); } }), { threshold: .12 });
   $$(".revela").forEach(el => io.observe(el));

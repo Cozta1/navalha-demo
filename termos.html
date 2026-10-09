@@ -11,12 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/vendas.css?v=202610091309">
-<link rel="stylesheet" href="css/documentos.css?v=202610091309">
+<link rel="stylesheet" href="css/vendas.css?v=202610091317">
+<link rel="stylesheet" href="css/documentos.css?v=202610091317">
 </head>
 <body>
 <!-- Campos destacados em amarelo (<mark>) precisam ser preenchidos antes de vender. Recomenda-se revisão por advogado. -->
-<header class="doc-topo"><div class="wrap"><a href="./" class="logo" style="font-size:1.3rem">marcaí</a><a class="btn btn-sm" href="privacidade.html">Política de Privacidade</a></div></header>
+<header class="doc-topo"><div class="wrap"><a href="./" class="logo" style="font-size:1.3rem">marcaí</a><span class="row-doc"><button class="tema-btn" id="tema-doc" type="button"></button><a class="btn btn-sm" href="privacidade.html">Política de Privacidade</a></span></div></header>
 
 <main class="doc">
   <span class="rotulo">Documento</span>
@@ -144,5 +144,12 @@
 
 <footer class="doc-rodape"><div class="wrap"><span>© <span id="ano"></span> Marcaí</span><span><a href="./">Página inicial</a> · <a href="privacidade.html">Privacidade</a></span></div></footer>
 <script>document.getElementById("ano").textContent = new Date().getFullYear();</script>
+<script>(function () {
+  var b = document.getElementById("tema-doc"), r = document.documentElement;
+  var atual = function () { return r.dataset.tema || (matchMedia("(prefers-color-scheme: light)").matches ? "claro" : "escuro"); };
+  var pinta = function () { var c = atual() === "claro"; b.textContent = c ? "\u263E" : "\u2600"; b.title = c ? "Usar tema escuro" : "Usar tema claro"; };
+  b.onclick = function () { var n = atual() === "claro" ? "escuro" : "claro"; r.dataset.tema = n; try { localStorage.setItem("navalha_tema", JSON.stringify(n)); } catch (e) {} pinta(); };
+  pinta();
+})();</script>
 </body>
 </html>

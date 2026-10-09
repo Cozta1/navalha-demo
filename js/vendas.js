@@ -80,6 +80,10 @@
     if (!SEG[seg]) seg = "";
     const cfg = SEG[seg];
     document.documentElement.dataset.seg = seg;
+    // salão, unhas e sobrancelhas/cílios nascem claros; barbearia e geral, escuros (o botão troca)
+    if (["salao", "unhas", "cilios"].includes(seg)) document.documentElement.dataset.temaPadrao = "claro";
+    else delete document.documentElement.dataset.temaPadrao;
+    $(".tema-btn")?.pinta?.();
     if (cfg.fonte && !fontes[seg]) { fontes[seg] = true; document.head.insertAdjacentHTML("beforeend", `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${cfg.fonte}&display=swap">`); }
     $$("[data-k]").forEach(el => { el.innerHTML = cfg[el.dataset.k] ?? original[el.dataset.k]; });
     i = 0; quebra(h1);
