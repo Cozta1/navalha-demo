@@ -1,0 +1,151 @@
+/* =====================================================================
+   Navalha — telas do cliente (agendar, meu horário, minha conta)
+   Premium e moderno: Fraunces + Hanken Grotesk, claro/escuro, formas
+   arredondadas. A cor de destaque é a da barbearia (--blue, vinda do banco).
+   Carregado DEPOIS de app.css e só nas páginas com <body class="cliente">.
+   ===================================================================== */
+
+body.cliente {
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Hanken Grotesk", system-ui, sans-serif;
+  --radius: 16px;
+  --raio-sm: 12px;
+  --on-accent: #fff;
+  --cobre-1: #c8703f; --cobre-2: #e09a63;
+  font-family: var(--sans);
+  font-weight: 400;
+  letter-spacing: 0;
+  transition: background-color .35s, color .35s;
+}
+
+/* ---------- temas (o padrão segue o aparelho; o botão grava a escolha) ---------- */
+:root[data-tema="escuro"] body.cliente, body.cliente {
+  color-scheme: dark;
+  --bg: #0e0d0c; --bg-alt: #141210; --card: #171513; --card-2: #201d1a;
+  --text: #efe7dc; --muted: #a39a8f; --line: #2c2824;
+  --blue-light: color-mix(in srgb, var(--blue) 65%, white);
+  --sombra: 0 1px 0 rgba(255,255,255,.03) inset, 0 18px 40px -24px rgba(0,0,0,.8);
+  background: radial-gradient(1200px 500px at 50% -200px, color-mix(in srgb, var(--blue) 14%, transparent), transparent 70%), var(--bg);
+}
+:root[data-tema="claro"] body.cliente {
+  color-scheme: light;
+  --bg: #f6f1ea; --bg-alt: #efe8de; --card: #ffffff; --card-2: #f3ede4;
+  --text: #1a1714; --muted: #6f665c; --line: #e3d9cc;
+  --blue-light: color-mix(in srgb, var(--blue) 80%, black);
+  --sombra: 0 1px 2px rgba(60,40,20,.06), 0 18px 40px -26px rgba(60,40,20,.35);
+  background: radial-gradient(1200px 500px at 50% -200px, color-mix(in srgb, var(--blue) 10%, transparent), transparent 70%), var(--bg);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema]) body.cliente {
+    color-scheme: light;
+    --bg: #f6f1ea; --bg-alt: #efe8de; --card: #ffffff; --card-2: #f3ede4;
+    --text: #1a1714; --muted: #6f665c; --line: #e3d9cc;
+    --blue-light: color-mix(in srgb, var(--blue) 80%, black);
+    --sombra: 0 1px 2px rgba(60,40,20,.06), 0 18px 40px -26px rgba(60,40,20,.35);
+    background: radial-gradient(1200px 500px at 50% -200px, color-mix(in srgb, var(--blue) 10%, transparent), transparent 70%), var(--bg);
+  }
+}
+
+/* ---------- tipografia ---------- */
+body.cliente h1, body.cliente h2, body.cliente h3 {
+  font-family: var(--serif); text-transform: none; letter-spacing: -.02em; font-weight: 600; line-height: 1.08;
+}
+body.cliente h1 { font-size: clamp(1.9rem, 6vw, 2.5rem); }
+body.cliente h2 { font-size: clamp(1.7rem, 5.5vw, 2.2rem); }
+body.cliente h3 { font-size: 1.25rem; }
+body.cliente h2 em, body.cliente h1 em { font-style: italic; font-weight: 400; color: var(--blue-light); }
+body.cliente .mono, body.cliente label, body.cliente .tag { font-family: var(--sans); }
+body.cliente label { font-size: .82rem; font-weight: 500; color: var(--muted); letter-spacing: .01em; }
+body.cliente .muted { color: var(--muted); }
+
+/* ---------- componentes ---------- */
+body.cliente .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--sombra); }
+body.cliente input, body.cliente select, body.cliente textarea {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--raio-sm); padding: 13px 14px; font-family: var(--sans); font-size: 1rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+body.cliente input:focus, body.cliente select:focus, body.cliente textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 18%, transparent);
+}
+body.cliente .btn {
+  border-radius: 999px; font-family: var(--sans); text-transform: none; letter-spacing: 0; font-weight: 600; font-size: .98rem;
+  padding: 14px 24px; position: relative; overflow: hidden; border: 1px solid var(--line); background: var(--card);
+}
+body.cliente .btn:hover { transform: translateY(-1px); box-shadow: none; }
+body.cliente .btn-blue {
+  color: var(--on-accent); border: 0;
+  background: linear-gradient(135deg, var(--blue), color-mix(in srgb, var(--blue) 60%, white) 55%, color-mix(in srgb, var(--blue) 85%, black));
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--blue) 80%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+}
+/* reflexo metálico que atravessa o botão */
+body.cliente .btn-blue::after {
+  content: ""; position: absolute; inset: -40% auto -40% -60%; width: 40%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transition: left .7s ease;
+}
+body.cliente .btn-blue:hover::after { left: 130%; }
+body.cliente .btn-blue:hover { box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--blue) 90%, transparent); }
+body.cliente .btn-ghost { background: transparent; border-color: color-mix(in srgb, var(--text) 22%, transparent); }
+body.cliente .btn-green { background: #1f9d55; color: #fff; border: 0; }
+body.cliente .btn-red { background: transparent; color: #e5484d; border-color: color-mix(in srgb, #e5484d 45%, transparent); }
+body.cliente .link-btn { color: var(--blue-light); }
+body.cliente a { color: var(--blue-light); }
+body.cliente .tag { border-radius: 999px; font-weight: 600; letter-spacing: .02em; padding: 4px 10px; }
+body.cliente .vazio { border-radius: var(--radius); border-color: var(--line); background: color-mix(in srgb, var(--card) 60%, transparent); }
+body.cliente .erro { color: #e5484d; }
+body.cliente #toasts .toast { border-radius: 14px; background: var(--card); color: var(--text); border-color: var(--line); box-shadow: var(--sombra); }
+
+/* ---------- botão de tema ---------- */
+.tema-btn {
+  width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text);
+  display: inline-grid; place-items: center; cursor: pointer; font-size: 1rem; transition: transform .2s, border-color .2s;
+}
+.tema-btn:hover { transform: rotate(-15deg); border-color: var(--blue); }
+
+/* ---------- capa da barbearia ---------- */
+.capa-b { position: relative; margin: 0 -16px; min-height: 220px; display: flex; align-items: flex-end; overflow: hidden; }
+.capa-b .foto { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.06); animation: capa-zoom 1.6s cubic-bezier(.2,.8,.2,1) forwards; }
+.capa-b .foto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.25) 40%, var(--bg) 100%); }
+.capa-b.sem-foto { min-height: 120px; }
+.capa-b.sem-foto .foto { background: radial-gradient(600px 220px at 30% 0%, color-mix(in srgb, var(--blue) 35%, transparent), transparent 70%); }
+@keyframes capa-zoom { to { transform: scale(1); } }
+.capa-topo { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+.capa-topo a.voltar-site, .capa-topo .conta-link {
+  background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(10px); border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
+  color: var(--text); padding: 8px 14px; border-radius: 999px; font-size: .85rem; font-weight: 500;
+}
+.capa-topo .acoes-topo { display: flex; gap: 8px; align-items: center; }
+.capa-info { position: relative; z-index: 2; display: flex; gap: 14px; align-items: flex-end; padding: 0 16px 14px; width: 100%; }
+.capa-info .logo { width: 76px; height: 76px; border-radius: 20px; object-fit: cover; border: 3px solid var(--bg); box-shadow: var(--sombra); flex: none; background: var(--card); }
+.capa-info .nome h1 { animation: sobe .7s .1s cubic-bezier(.2,.8,.2,1) both; }
+.capa-info .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; font-size: .86rem; color: var(--muted); animation: sobe .7s .2s cubic-bezier(.2,.8,.2,1) both; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--card) 80%, transparent); border: 1px solid var(--line); color: var(--text); font-size: .8rem; font-weight: 500; }
+.chip .estrela { color: #f4b740; }
+
+/* ---------- etapas ---------- */
+.etapas { display: flex; gap: 6px; margin: 18px 0 22px; counter-reset: etapa; }
+.etapas span { flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: .74rem; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.etapas span::before { content: ""; height: 4px; border-radius: 4px; background: var(--line); transition: background .4s; }
+.etapas span.on { color: var(--text); }
+.etapas span.on::before { background: linear-gradient(90deg, var(--blue), color-mix(in srgb, var(--blue) 55%, white)); }
+
+/* ---------- movimento ---------- */
+@keyframes sobe { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes entra-lado { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+.anima-etapa > * { animation: entra-lado .5s cubic-bezier(.2,.8,.2,1) both; }
+.anima-etapa > *:nth-child(2) { animation-delay: .05s; }
+.anima-etapa > *:nth-child(3) { animation-delay: .1s; }
+.cascata > * { animation: sobe .45s cubic-bezier(.2,.8,.2,1) both; }
+.cascata > *:nth-child(1) { animation-delay: .03s } .cascata > *:nth-child(2) { animation-delay: .06s } .cascata > *:nth-child(3) { animation-delay: .09s }
+.cascata > *:nth-child(4) { animation-delay: .12s } .cascata > *:nth-child(5) { animation-delay: .15s } .cascata > *:nth-child(6) { animation-delay: .18s }
+.cascata > *:nth-child(7) { animation-delay: .21s } .cascata > *:nth-child(8) { animation-delay: .24s } .cascata > *:nth-child(n+9) { animation-delay: .27s }
+.check-anima svg { width: 84px; height: 84px; }
+.check-anima circle { stroke-dasharray: 260; stroke-dashoffset: 260; animation: traco .7s ease forwards; }
+.check-anima path { stroke-dasharray: 60; stroke-dashoffset: 60; animation: traco .4s .55s ease forwards; }
+@keyframes traco { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  body.cliente *, body.cliente *::before, body.cliente *::after { animation: none !important; transition: none !important; }
+  .check-anima circle, .check-anima path { stroke-dashoffset: 0; }
+}
+
+body.cliente footer { color: var(--muted); font-family: var(--sans); }
+body.cliente footer a { color: var(--muted); text-decoration: underline; }

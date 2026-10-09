@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agendar horário</title>
+<meta name="theme-color" content="#0e0d0c">
+<script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/cliente.css">
+<style>
+  main { padding-bottom: 120px; }
+  .sub { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+  .etapa h2 { margin-bottom: 2px; }
+  .opcoes { display: grid; gap: 10px; margin-top: 18px; }
+  .opcao { display: flex; align-items: center; gap: 14px; text-align: left; width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; color: var(--text); font: inherit; cursor: pointer; box-shadow: var(--sombra); transition: border-color .2s, transform .2s, background .2s; }
+  .opcao:hover { border-color: color-mix(in srgb, var(--blue) 60%, var(--line)); transform: translateY(-2px); }
+  .opcao.sel { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, var(--card)); }
+  .opcao .av { width: 52px; height: 52px; border-radius: 16px; background: var(--card-2); display: grid; place-items: center; font-family: var(--serif); font-weight: 600; font-size: 1.2rem; flex: none; overflow: hidden; }
+  .opcao .av img { width: 100%; height: 100%; object-fit: cover; }
+  .opcao b { display: block; font-family: var(--serif); font-weight: 600; font-size: 1.15rem; letter-spacing: -.01em; }
+  .opcao .desc { color: var(--muted); font-size: .88rem; }
+  .opcao .preco { margin-left: auto; text-align: right; font-weight: 700; white-space: nowrap; }
+  .opcao .preco small { display: block; color: var(--muted); font-weight: 400; font-size: .78rem; }
+  .check { width: 26px; height: 26px; border-radius: 9px; border: 2px solid var(--line); display: grid; place-items: center; flex: none; font-weight: 700; font-size: .85rem; color: transparent; transition: all .2s; }
+  .opcao.sel .check { background: var(--blue); border-color: var(--blue); color: var(--on-accent); transform: scale(1.08); }
+  .carrinho { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 12px 16px 16px; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); border-top: 1px solid var(--line); animation: sobe .35s cubic-bezier(.2,.8,.2,1); }
+  .carrinho .wrap { display: flex; align-items: center; gap: 14px; justify-content: space-between; padding: 0; }
+  .carrinho b { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; }
+  .carrinho .sub { margin: 0; font-size: .8rem; }
+  .dias { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 12px; margin-top: 18px; scrollbar-width: none; }
+  .dia { flex: none; width: 64px; padding: 10px 0; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--text); text-align: center; cursor: pointer; font: inherit; transition: all .2s; }
+  .dia small { display: block; color: var(--muted); font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .dia b { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; display: block; line-height: 1.15; }
+  .dia:hover { border-color: var(--blue); }
+  .dia.sel { background: var(--blue); border-color: var(--blue); color: var(--on-accent); transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--blue); }
+  .dia.sel small { color: inherit; opacity: .8; }
+  .dia:disabled { opacity: .3; cursor: not-allowed; }
+  .turno { margin-top: 20px; }
+  .turno h4 { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 10px; }
+  .horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+  .hora { padding: 12px 0; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .hora:hover { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 10%, var(--card)); transform: translateY(-1px); }
+  .hora.promo { border-color: color-mix(in srgb, var(--cobre-1) 60%, var(--line)); }
+  .hora small { display: block; font-size: .68rem; color: var(--cobre-1); font-weight: 700; }
+  .resumo { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin: 18px 0; display: grid; gap: 8px; box-shadow: var(--sombra); }
+  .resumo div { display: flex; justify-content: space-between; gap: 12px; }
+  .resumo span { color: var(--muted); }
+  .resumo .total { border-top: 1px dashed var(--line); padding-top: 10px; font-weight: 700; font-size: 1.1rem; }
+  .resumo .total span { color: var(--text); }
+  .resumo .promo-linha { color: var(--cobre-1); }
+  .resumo .promo-linha span { color: inherit; }
+  .voltar { background: none; border: 0; color: var(--muted); font: inherit; cursor: pointer; margin-top: 22px; }
+  .voltar:hover { color: var(--text); }
+  .sucesso { text-align: center; padding-top: 10px; }
+  .sucesso .check-anima { color: var(--blue); margin: 0 auto 14px; width: 84px; }
+  .meus { margin-top: 16px; }
+  .meus a { display: flex; justify-content: space-between; gap: 10px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; color: var(--text); margin-top: 8px; }
+  .espera { margin-top: 18px; border: 1px dashed var(--line); border-radius: var(--radius); padding: 18px; }
+  .periodos { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 14px; }
+  .periodos label { margin: 0; }
+  .periodos input { display: none; }
+  .periodos span { display: inline-block; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; color: var(--text); font-size: .9rem; }
+  .periodos input:checked + span { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+  .promo-aviso { background: color-mix(in srgb, var(--cobre-1) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--cobre-1) 40%, var(--line)); border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; font-size: .9rem; }
+  footer { text-align: center; font-size: .78rem; padding: 40px 0 24px; }
+</style>
+</head>
+<body class="cliente">
+<main class="wrap estreito">
+  <div id="cabecalho"></div>
+  <div id="meus" class="meus hidden"></div>
+  <div class="etapas" id="passos"><span>Serviços</span><span>Profissional</span><span>Horário</span><span>Confirmar</span></div>
+  <div id="app"><p class="carregando">Carregando…</p></div>
+</main>
+<div class="carrinho hidden" id="carrinho"></div>
+<footer>Agendamento online por <a href="./">Navalha</a></footer>
+
+<script src="mock.js"></script>
+
+<script src="js/comum.js"></script>
+<script src="js/agendar.js"></script>
+</body>
+</html>

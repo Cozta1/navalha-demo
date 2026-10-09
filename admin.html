@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin · Navalha</title>
+<meta name="theme-color" content="#0e0d0c">
+<script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/cliente.css">
+<style>
+  /* o admin usa o cobre do Navalha como cor de destaque */
+  :root { --blue: #c8703f; --on-accent: #1e1009; }
+  body.cliente .btn-blue { background: linear-gradient(135deg, #b5602f 0%, #e09a63 35%, #f3c39b 50%, #d27b45 65%, #b5602f 100%); background-size: 180% auto; }
+  .topo-adm { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .topo-adm .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 12px; }
+  .logo-n { display: inline-flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 1.4rem; font-weight: 600; letter-spacing: -.03em; color: var(--text); }
+  .logo-n svg { width: 30px; height: 30px; }
+  .logo-n small { font-family: var(--sans); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--blue-light); margin-left: 4px; }
+  main.wrap { padding-top: 26px; padding-bottom: 70px; max-width: 1180px; }
+  h2 { margin-bottom: 4px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 6px 0 30px; }
+  .kpis .card { padding: 18px; }
+  .kpis b { display: block; font-family: var(--serif); font-weight: 600; font-size: 2rem; letter-spacing: -.02em; margin-top: 4px; white-space: nowrap; }
+  .kpis .card.destaque { border: 1px solid transparent; background: linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #b5602f, #f3c39b, #b5602f) border-box; }
+  .tabela { border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; background: var(--card); box-shadow: var(--sombra); }
+  .tr { display: grid; grid-template-columns: 2fr 1.1fr .9fr 1fr .7fr .6fr auto; gap: 12px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); min-width: 900px; }
+  .tr.th { border-top: 0; background: var(--card-2); font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .tr b { font-weight: 600; }
+  .tag.teste { background: color-mix(in srgb, #3b82f6 16%, transparent); color: #60a5fa; }
+  .tag.ativa { background: color-mix(in srgb, #22c55e 16%, transparent); color: #22c55e; }
+  .tag.atrasada { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #d97706; }
+  .tag.suspensa, .tag.cancelada { background: color-mix(in srgb, #ef4444 15%, transparent); color: #ef4444; }
+  .auth { max-width: 420px; margin: 70px auto; padding: 32px; }
+  .filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filtros input { max-width: 280px; }
+  .filtros select { width: auto; }
+  .secao { margin-top: 40px; }
+  .plano { display: grid; grid-template-columns: 1.4fr 1fr 1fr .8fr auto; gap: 10px; align-items: end; }
+  @media (max-width: 760px) { .plano { grid-template-columns: 1fr 1fr; } }
+  .plano-card { padding: 18px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chk { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text); background: var(--bg-alt); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; font-size: .88rem; cursor: pointer; }
+  .pedido { border-top: 1px solid var(--line); padding: 16px 0 4px; }
+  .pedido:first-of-type { border-top: 0; }
+  .row-f { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body class="cliente">
+<header class="topo-adm"><div class="wrap">
+  <span class="logo-n"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5602f"/><stop offset=".45" stop-color="#f3c39b"/><stop offset="1" stop-color="#c8703f"/></linearGradient></defs>
+    <path d="M8 27 29 8c3-2.4 6.6 1.2 4.2 4.2L14 32z" fill="url(#lg)"/><path d="M14 32 7 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="14" cy="32" r="2.2" fill="currentColor"/></svg>navalha<small>admin</small></span>
+  <div class="row"><span id="tema"></span><button class="btn btn-ghost btn-sm hidden" id="sair">Sair</button></div>
+</div></header>
+<main class="wrap" id="app"><p class="carregando">Carregando…</p></main>
+
+<script src="mock.js"></script>
+
+<script src="js/comum.js"></script>
+<script>$("#tema").replaceWith(botaoTema());</script>
+<script src="js/admin.js"></script>
+</body>
+</html>

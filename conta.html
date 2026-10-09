@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Minha conta</title>
+<meta name="theme-color" content="#0e0d0c">
+<script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/cliente.css">
+<style>
+  main.wrap { padding-top: 30px; padding-bottom: 60px; }
+  .topo-b { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .topo-b .marca-b { display: flex; align-items: center; gap: 12px; }
+  .topo-b img { width: 56px; height: 56px; border-radius: 16px; object-fit: cover; }
+  .sub { color: var(--muted); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+  .codigo-otp { font-family: var(--sans); font-size: 1.6rem; letter-spacing: .5em; text-align: center; }
+  .ag { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--sombra); padding: 16px; margin-top: 8px; display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: start; }
+  .ag.futuro { border-color: color-mix(in srgb, var(--blue) 55%, var(--line)); }
+  .ag .quando { font-family: var(--serif); font-weight: 600; font-size: 1.5rem; line-height: 1.1; }
+  .ag .acoes { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+  .estrelas { color: #ffc531; letter-spacing: 2px; }
+  h3.secao { margin: 30px 0 4px; }
+</style>
+</head>
+<body class="cliente">
+<main class="wrap estreito" id="app"><p class="carregando">Carregando…</p></main>
+
+<script src="mock.js"></script>
+
+<script src="js/comum.js"></script>
+<script src="js/conta.js"></script>
+</body>
+</html>

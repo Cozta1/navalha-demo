@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Meu agendamento</title>
+<meta name="theme-color" content="#0e0d0c">
+<script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/cliente.css">
+<style>
+  main.wrap { padding-top: 34px; padding-bottom: 60px; }
+  .topo-b { display: flex; align-items: center; gap: 14px; }
+  .topo-b img { width: 64px; height: 64px; border-radius: 18px; object-fit: cover; }
+  .topo-b .grow { flex: 1; }
+  .linha { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+  .linha:last-child { border-bottom: 0; }
+  .linha span { color: var(--muted); }
+  .acoes { display: grid; gap: 12px; margin-top: 22px; }
+  .atalhos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .atalho { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px; border-radius: 14px; border: 1px solid var(--line); background: var(--card);
+    color: var(--text); font: inherit; font-weight: 600; cursor: pointer; transition: border-color .2s, transform .2s; }
+  .atalho:hover { border-color: var(--blue); transform: translateY(-1px); }
+  .link-cancelar { background: none; border: 0; color: #e5484d; font: inherit; font-size: .92rem; cursor: pointer; padding: 6px; justify-self: center; }
+  .link-cancelar:hover { text-decoration: underline; }
+  .rodape-links { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 34px; font-size: .88rem; }
+  .rodape-links a { color: var(--muted); }
+  .rodape-links a:hover { color: var(--text); }
+  .dias { scrollbar-width: none; }
+  .dias::-webkit-scrollbar { display: none; }
+  .dias { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 12px; margin-top: 12px; }
+  .dia { flex: none; width: 62px; padding: 10px 0; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--text); text-align: center; cursor: pointer; font: inherit; }
+  .dia small { display: block; color: var(--muted); font-family: var(--sans); font-size: .68rem; text-transform: uppercase; }
+  .dia b { font-family: var(--serif); font-weight: 600; font-size: 1.6rem; display: block; line-height: 1.1; }
+  .dia.sel { background: var(--blue); border-color: var(--blue); color: var(--on-accent); }
+  .dia:disabled { opacity: .25; cursor: not-allowed; }
+  .horas { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; margin-top: 8px; }
+  .hora { padding: 11px 0; border-radius: 12px; background: var(--card); border: 1px solid var(--line); color: var(--text); font-family: var(--sans); font-weight: 600; cursor: pointer; }
+  .hora:hover { border-color: var(--blue); }
+  .aval { margin-top: 20px; border-color: color-mix(in srgb, #ffc531 45%, var(--line)); }
+  .stars { display: flex; gap: 4px; margin: 10px 0 14px; }
+  .stars button { background: none; border: 0; font-size: 2.3rem; line-height: 1; color: var(--line); cursor: pointer; padding: 0 2px; transition: transform .1s; }
+  .stars button.on { color: #ffc531; }
+  .stars button:hover { transform: scale(1.12); }
+  .resposta { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--blue); background: var(--bg-alt); font-size: .92rem; }
+</style>
+</head>
+<body class="cliente">
+<main class="wrap estreito" id="app"><p class="carregando">Carregando…</p></main>
+
+<script src="mock.js"></script>
+
+<script src="js/comum.js"></script>
+<script>
+(async () => {
+  if (!configurado) return avisoNaoConfigurado();
+  const app = $("#app");
+  const codigo = new URLSearchParams(location.search).get("c");
+  if (!/^[0-9a-f-]{36}$/i.test(codigo || "")) { app.innerHTML = `<div class="vazio">Link inválido.</div>`; return; }
+  let a;
+
+  async function render() {
+    const r = await sb.rpc("consultar_agendamento", { p_codigo: codigo });
+    a = r.data;
+    if (r.error || !a) { app.innerHTML = `<div class="vazio">${r.error ? esc(msgErro(r.error)) : "Agendamento não encontrado."}</div>`; return; }
+    const b = a.barbearia, fuso = b.fuso;
+    aplicarTema(b);
+    const rotulo = { confirmado: "Confirmado", concluido: "Concluído", cancelado: "Cancelado", faltou: "Não compareceu" }[a.status];
+    document.title = `Meu agendamento · ${b.nome}`;
+    app.innerHTML = `
+      <div class="topo-b">
+        ${b.logo_url ? `<img src="${esc(b.logo_url)}" alt="">` : ""}
+        <div class="grow"><h1>${esc(b.nome)}</h1><span class="tag ${a.status}">${rotulo}</span></div>
+        <span id="tema"></span>
+      </div>
+      <div class="card mt2 anima-etapa">
+        <div class="linha"><span>Cliente</span><b>${esc(a.cliente)}</b></div>
+        ${(a.servicos || [{ nome: a.servico, preco: a.preco }]).map(s => `<div class="linha"><span>${esc(s.nome)}${s.promocao ? ` <span style="color:#ffb020" class="small">🔥 ${esc(s.promocao)}</span>` : ""}</span>
+          <b class="mono">${s.preco_cheio && Number(s.preco_cheio) > Number(s.preco) ? `<s class="muted" style="font-weight:400">${dinheiro(s.preco_cheio)}</s> ` : ""}${dinheiro(s.preco)}</b></div>`).join("")}
+        ${Number(a.desconto_cupom) ? `<div class="linha"><span>🏷️ Cupom</span><b class="mono">− ${dinheiro(a.desconto_cupom)}</b></div>` : ""}
+        <div class="linha"><span>Total</span><b class="mono">${dinheiro(a.preco)}</b></div>
+        <div class="linha"><span>Profissional</span><b>${esc(a.profissional)}</b></div>
+        <div class="linha"><span>Data</span><b>${esc(fmtDataLonga(a.inicio, fuso))}</b></div>
+        <div class="linha"><span>Horário</span><b class="mono">${fmtHora(a.inicio, fuso)} – ${fmtHora(a.fim, fuso)}</b></div>
+        ${b.endereco ? `<div class="linha"><span>Endereço</span><b style="text-align:right">${esc(b.endereco)}</b></div>` : ""}
+      </div>
+      ${a.pode_avaliar ? `<form class="card aval" id="avaliar"><h3>Como foi o atendimento?</h3>
+          <div class="stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-n="${n}" aria-label="${n} estrela${n > 1 ? "s" : ""}">★</button>`).join("")}</div>
+          <div class="campo"><textarea id="coment" rows="3" maxlength="500" placeholder="Conte o que achou (opcional)"></textarea></div>
+          <button class="btn btn-blue btn-block">Enviar avaliação</button><p class="erro hidden" id="aerr"></p></form>` : ""}
+      ${a.avaliacao ? `<div class="card aval"><h3>Sua avaliação</h3>
+          <div style="color:#ffc531;font-size:1.4rem;margin:6px 0">${"★".repeat(a.avaliacao.nota)}<span style="color:var(--line)">${"★".repeat(5 - a.avaliacao.nota)}</span></div>
+          ${a.avaliacao.comentario ? `<p>${esc(a.avaliacao.comentario)}</p>` : ""}
+          ${a.avaliacao.resposta ? `<div class="resposta"><b>${esc(b.nome)}:</b> ${esc(a.avaliacao.resposta)}</div>` : ""}</div>` : ""}
+      ${a.status === "confirmado" && !a.pode_alterar && new Date(a.inicio) > new Date()
+        ? `<p class="muted small mt">Trocas e cancelamentos pelo site vão até ${b.cancelamento_horas}h antes. Agora, só pelo WhatsApp.</p>` : ""}
+      <div class="acoes" id="acoes">
+        ${a.pode_alterar ? `<button class="btn btn-blue" id="trocar">Trocar horário</button>`
+          : a.status !== "confirmado" ? `<a class="btn btn-blue" href="agendar.html?b=${encodeURIComponent(b.slug)}&repetir=${codigo}">Agendar de novo</a>` : ""}
+        ${a.status === "confirmado" || b.whatsapp ? `<div class="atalhos">
+          ${a.status === "confirmado" ? `<button class="atalho" id="ics">📅<span>Calendário</span></button>` : ""}
+          ${b.whatsapp ? `<a class="atalho" target="_blank" rel="noopener" href="${linkWhats(b.whatsapp, `Olá! Sobre meu horário de ${fmtDataLonga(a.inicio, fuso)}, ${fmtHora(a.inicio, fuso)} (${a.servico}):`)}">💬<span>WhatsApp</span></a>` : ""}
+        </div>` : ""}
+        ${a.pode_alterar ? `<button class="link-cancelar" id="cancelar">Cancelar este horário</button>` : ""}
+      </div>
+      <div id="troca"></div>
+      <nav class="rodape-links">
+        ${a.status === "confirmado" ? `<a href="agendar.html?b=${encodeURIComponent(b.slug)}">Marcar outro horário</a>` : ""}
+        <a href="conta.html?b=${encodeURIComponent(b.slug)}">Minha conta</a>
+        ${b.site_url ? `<a href="${esc(b.site_url)}">Site da barbearia</a>` : ""}
+      </nav>`;
+    $("#tema")?.replaceWith(botaoTema());
+    $("#ics")?.addEventListener("click", () => baixarIcs({
+      titulo: `${a.servico} · ${b.nome}`, inicio: a.inicio, fim: a.fim,
+      local: b.endereco || b.nome, descricao: `Com ${a.profissional}\n${location.href}`,
+    }));
+    $("#cancelar")?.addEventListener("click", async ev => {
+      if (!confirm("Cancelar este horário? Ele ficará livre para outra pessoa.")) return;
+      ev.target.disabled = true;
+      const { data: ok, error } = await sb.rpc("cancelar_agendamento", { p_codigo: codigo });
+      if (error) { toast(msgErro(error), "erro"); ev.target.disabled = false; return; }
+      toast(ok ? "Horário cancelado." : "Não foi possível cancelar: o prazo já passou.", ok ? "ok" : "erro");
+      render();
+    });
+    $("#trocar")?.addEventListener("click", telaTroca);
+    const fa = $("#avaliar");
+    if (fa) {
+      let nota = 0;
+      const pinta = n => $$(".stars button", fa).forEach(x => x.classList.toggle("on", Number(x.dataset.n) <= n));
+      $$(".stars button", fa).forEach(x => {
+        x.onclick = () => { nota = Number(x.dataset.n); pinta(nota); };
+        x.onmouseenter = () => pinta(Number(x.dataset.n));
+        x.onmouseleave = () => pinta(nota);
+      });
+      fa.onsubmit = async ev => {
+        ev.preventDefault();
+        const err = $("#aerr");
+        if (!nota) { err.textContent = "Toque nas estrelas para dar a nota."; err.classList.remove("hidden"); return; }
+        const { error } = await sb.rpc("avaliar", { p_codigo: codigo, p_nota: nota, p_comentario: $("#coment").value });
+        if (error) { err.textContent = msgErro(error); err.classList.remove("hidden"); return; }
+        toast("Obrigado pela avaliação!");
+        render();
+      };
+      if (location.hash === "#avaliar") fa.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  // Reagendar: mesmos serviços, escolhe novo dia/horário (prefere o mesmo profissional)
+  async function telaTroca() {
+    const b = a.barbearia, box = $("#troca");
+    $("#acoes")?.classList.add("hidden");
+    const { data: jor } = await sb.from("jornadas").select("profissional_id,dia_semana").eq("barbearia_id", b.id);
+    const dias = new Set((jor || []).map(j => j.dia_semana));
+    const hoje = hojeNoFuso(b.fuso);
+    box.innerHTML = `<div class="card mt2 anima-etapa"><div class="row space"><h3>Novo horário</h3><button class="link-btn small" id="desistir">Desistir</button></div>
+      <label class="row mt" style="color:var(--text)"><input type="checkbox" id="mesmo" checked> Manter com ${esc(a.profissional)}</label>
+      <div class="dias">${Array.from({ length: 31 }, (_, i) => somaDias(hoje, i)).map(d => {
+        const f = fmtDataCurta(d);
+        return `<button class="dia" data-d="${d}" ${dias.has(diaSemana(d)) ? "" : "disabled"}><small>${f.semana}</small><b>${f.dia}</b><small>${f.mes}</small></button>`;
+      }).join("")}</div><div id="horas"></div></div>`;
+    box.scrollIntoView({ behavior: "smooth" });
+    let diaSel = null;
+    const carregar = async d => {
+      diaSel = d;
+      $$(".dia", box).forEach(x => x.classList.toggle("sel", x.dataset.d === d));
+      $("#horas").innerHTML = `<p class="carregando">Buscando…</p>`;
+      const { data, error } = await sb.rpc("horarios_disponiveis", {
+        p_barbearia: b.id, p_servicos: (a.servicos || []).map(s => s.id).filter(Boolean), p_data: d,
+        p_profissional: $("#mesmo").checked ? a.profissional_id : null, p_ignorar: a.id,
+      });
+      if (diaSel !== d) return;
+      if (error) { $("#horas").innerHTML = `<div class="vazio">${esc(msgErro(error))}</div>`; return; }
+      const unicos = new Map(); for (const h of data) if (!unicos.has(h.inicio)) unicos.set(h.inicio, h);
+      $("#horas").innerHTML = unicos.size ? `<div class="horas">${[...unicos.values()].map(h =>
+        `<button class="hora" data-i="${h.inicio}" data-p="${h.profissional_id}">${fmtHora(h.inicio, b.fuso)}</button>`).join("")}</div>`
+        : `<div class="vazio">Sem horários neste dia.</div>`;
+      $$(".hora", box).forEach(x => x.onclick = async () => {
+        if (!confirm(`Trocar para ${fmtDataLonga(x.dataset.i, b.fuso)}, ${fmtHora(x.dataset.i, b.fuso)}?`)) return;
+        const { error } = await sb.rpc("reagendar_agendamento", { p_codigo: codigo, p_inicio: x.dataset.i, p_profissional: x.dataset.p });
+        if (error) return toast(msgErro(error), "erro");
+        toast("Horário trocado.");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        render();
+      });
+    };
+    $("#desistir").onclick = () => { box.innerHTML = ""; $("#acoes")?.classList.remove("hidden"); };
+    $$(".dia:not(:disabled)", box).forEach(x => x.onclick = () => carregar(x.dataset.d));
+    $("#mesmo").onchange = () => diaSel && carregar(diaSel);
+    const primeiro = $(".dia:not(:disabled)", box); if (primeiro) carregar(primeiro.dataset.d);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

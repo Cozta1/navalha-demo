@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Navalha · Site, agenda e gestão para barbearias</title>
+<meta name="description" content="Site próprio com domínio, agenda online 24h, caixa, comissões e marketing para barbearias. Teste 14 dias grátis, sem fidelidade.">
+<meta name="theme-color" content="#0e0d0c">
+<script>(function () { try { var t = JSON.parse(localStorage.getItem("navalha_tema")); if (t) document.documentElement.dataset.tema = t; } catch (e) {} })();</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%230e0d0c'/%3E%3Cpath d='M9 27 29 9c3-2 6 1 4 4L14 31z' fill='%23e09a63'/%3E%3Cpath d='M14 31 8 36' stroke='%23efe7dc' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/vendas.css">
+</head>
+<body>
+
+<header id="topo"><div class="wrap">
+  <a href="#" class="logo" aria-label="Navalha">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5602f"/><stop offset=".45" stop-color="#f3c39b"/><stop offset="1" stop-color="#c8703f"/></linearGradient></defs>
+      <path d="M8 27 29 8c3-2.4 6.6 1.2 4.2 4.2L14 32z" fill="url(#lg)"/><path d="M14 32 7 38" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><circle cx="14" cy="32" r="2.2" fill="currentColor"/></svg>
+    navalha</a>
+  <nav class="menu"><a class="ln" href="#como">Como funciona</a><a class="ln" href="#recursos">Recursos</a><a class="ln" href="#planos">Planos</a><a class="ln" href="#duvidas">Dúvidas</a></nav>
+  <div class="topo-acoes"><span id="tema"></span><a class="btn btn-sm so-desk" href="painel.html">Entrar</a><a class="btn btn-cobre btn-sm" href="painel.html">Testar grátis</a></div>
+</div></header>
+
+<main>
+  <section class="hero"><div class="wrap grade">
+    <div>
+      <span class="rotulo aparece" style="animation-delay:.05s">Site + agenda + gestão pra barbearia</span>
+      <h1 id="titulo">Chega de agenda no <em class="cobre">papel</em> e cliente sumido.</h1>
+      <p class="lead aparece" style="animation-delay:.9s">Sua barbearia com site próprio, agenda online 24h e caixa num lugar só. O cliente marca sozinho pelo celular, você só se preocupa com o corte.</p>
+      <div class="ctas aparece" style="animation-delay:1.05s"><a class="btn btn-cobre" href="painel.html">Testar 14 dias grátis</a><a class="btn" href="#demo">Ver demonstração</a></div>
+      <div class="selos aparece" style="animation-delay:1.2s"><span>Sem fidelidade</span><span>Site e domínio inclusos</span><span>A gente monta pra você</span></div>
+    </div>
+    <div class="palco" id="palco">
+      <div class="note"><img src="img/tela-painel.webp" alt="Painel do Navalha com o resumo do dia"></div>
+      <div class="cel"><img src="img/tela-agendar.webp" alt="Cliente escolhendo horário pelo celular"></div>
+      <div class="bolha b1"><span class="ic">📅</span><div><b>Novo agendamento</b><small>João · Disfarçado · 15:30</small></div></div>
+      <div class="bolha b2"><span class="ic">💵</span><div><b>R$ 1.240 hoje</b><small>18 atendimentos</small></div></div>
+    </div>
+  </div></section>
+
+  <div class="faixa" aria-hidden="true"><div id="faixa"></div></div>
+
+  <section id="como"><div class="wrap">
+    <div class="revela"><span class="rotulo">Como funciona</span><h2 style="margin-top:14px">Três passos e a<br>agenda <em class="cobre">enche sozinha</em>.</h2></div>
+    <div class="passos">
+      <div class="passo revela atraso-1"><span class="n cobre">1</span><h3>A gente monta seu site</h3><p>Com sua logo, suas fotos, seus preços e seu endereço. Pode até usar o seu domínio .com.br. Você não mexe em nada técnico.</p></div>
+      <div class="passo revela atraso-2"><span class="n cobre">2</span><h3>O cliente marca sozinho</h3><p>Escolhe o serviço, o barbeiro e o horário livre, de madrugada ou no domingo. Troca e cancela pelo link, sem te chamar no WhatsApp.</p></div>
+      <div class="passo revela atraso-3"><span class="n cobre">3</span><h3>Você cuida do resto no painel</h3><p>Agenda do dia, caixa, comissão de cada barbeiro, promoções pros horários vazios e o cliente sumido pra chamar de volta.</p></div>
+    </div>
+  </div></section>
+
+  <section id="recursos" style="padding-top:40px"><div class="wrap">
+    <div class="recurso">
+      <div class="revela esq"><span class="rotulo">Site próprio</span><h3>Sua barbearia com <em>cara de marca</em>, não de perfil genérico.</h3>
+        <p class="lead">Um site bonito de verdade, com preços, fotos, equipe, avaliações e mapa. Atualiza sozinho quando você muda algo no painel.</p>
+        <ul><li>Domínio próprio em todos os planos</li><li>Dois estilos visuais e a cor da sua marca</li><li>Ajustes inclusos todo mês: é só pedir no painel</li></ul></div>
+      <div class="rec-img revela dir"><div class="moldura cel-m"><img src="img/tela-site.webp" alt="Site da barbearia no celular" loading="lazy"></div></div>
+    </div>
+    <div class="recurso inv">
+      <div class="revela dir"><span class="rotulo">Agenda online 24h</span><h3>Horário marcado enquanto você <em>tá cortando</em>.</h3>
+        <p class="lead">Só aparecem os horários livres de verdade de cada barbeiro. Nada de horário duplicado.</p>
+        <ul><li>Vários serviços na mesma visita</li><li>Lista de espera quando o dia lota</li><li>Lembrete com um toque no WhatsApp</li><li>O cliente troca e cancela sozinho, dentro do prazo que você define</li></ul></div>
+      <div class="rec-img revela esq"><div class="moldura cel-m"><img src="img/tela-agendar.webp" alt="Tela de agendamento" loading="lazy"></div></div>
+    </div>
+    <div class="recurso">
+      <div class="revela esq"><span class="rotulo">Caixa e comissões</span><h3>Fechou o corte, <em>fechou a conta</em>.</h3>
+        <p class="lead">Comanda com serviço e produto, desconto, Pix e dinheiro no mesmo pagamento. A comissão de cada barbeiro sai calculada.</p>
+        <ul><li>Pagamento dividido e troco automático</li><li>Pacotes de corte com saldo controlado</li><li>Estoque com baixa na venda (Premium)</li></ul></div>
+      <div class="rec-img revela dir"><div class="moldura"><img src="img/tela-caixa.webp" alt="Caixa com comanda aberta" loading="lazy"></div></div>
+    </div>
+    <div class="recurso inv">
+      <div class="revela dir"><span class="rotulo">Marketing</span><h3>Encha os horários vazios e <em>traga quem sumiu</em>.</h3>
+        <p class="lead">Promoção automática na terça de manhã, cupom pra quem não aparece há 45 dias e parabéns no aniversário, tudo com mensagem pronta.</p>
+        <ul><li>Promoções por dia e horário</li><li>Cupons com limite de uso</li><li>Clientes sumidos e aniversariantes da semana</li></ul></div>
+      <div class="rec-img revela esq"><div class="moldura"><img src="img/tela-marketing.webp" alt="Tela de marketing" loading="lazy"></div></div>
+    </div>
+    <div class="recurso">
+      <div class="revela esq"><span class="rotulo">Relatórios</span><h3>Saiba quanto entrou <em>sem fazer conta</em>.</h3>
+        <p class="lead">Faturamento por dia, ticket médio, faltas, ocupação da agenda e quanto cada barbeiro trouxe.</p>
+        <ul><li>Por profissional, serviço e forma de pagamento</li><li>Clientes novos e taxa de falta</li></ul></div>
+      <div class="rec-img revela dir"><div class="moldura"><img src="img/tela-relatorios.webp" alt="Relatórios" loading="lazy"></div></div>
+    </div>
+  </div></section>
+
+  <section id="demo" class="demo"><div class="wrap"><div class="caixa revela">
+    <span class="rotulo">Demonstração ao vivo</span>
+    <h2 style="margin-top:14px">Mexe à vontade.<br><em class="cobre">É de mentirinha.</em></h2>
+    <p class="lead">Uma barbearia de exemplo funcionando: o site, o agendamento do cliente e o painel do dono. Nada do que você fizer fica salvo.</p>
+    <div class="ctas"><a class="btn btn-cobre" id="demo-site" href="#">Abrir o site de exemplo</a><a class="btn" id="demo-agendar" href="#">Agendar como cliente</a><a class="btn" id="demo-painel" href="#">Abrir o painel do dono</a></div>
+  </div></div></section>
+
+  <section id="planos"><div class="wrap">
+    <div style="text-align:center" class="revela"><span class="rotulo">Planos</span><h2 style="margin-top:14px">Site e agenda em <em class="cobre">todos</em> os planos.</h2>
+      <p class="lead" style="margin:14px auto 0">14 dias grátis com tudo liberado. Depois, escolhe o que faz sentido pra sua barbearia.</p></div>
+    <div class="planos" id="lista-planos"></div>
+    <p class="nota-planos">Sem fidelidade · sem taxa por agendamento · cancele quando quiser</p>
+  </div></section>
+
+  <section id="duvidas" style="padding-top:40px"><div class="wrap">
+    <div style="text-align:center" class="revela"><span class="rotulo">Dúvidas</span><h2 style="margin-top:14px">Perguntas que todo<br>barbeiro faz.</h2></div>
+    <div class="faq">
+      <details><summary>Tem fidelidade ou multa pra cancelar?</summary><p>Não. Você paga mês a mês e cancela quando quiser. O site fica no ar até o fim do mês pago.</p></details>
+      <details><summary>Como funciona o teste grátis?</summary><p>São 14 dias com tudo liberado, sem cartão. Você cria a conta, cadastra seus serviços e já recebe agendamentos. No fim, escolhe um plano para continuar.</p></details>
+      <details><summary>Já uso o Booksy. Dá pra migrar?</summary><p>Dá. A gente cadastra seus serviços, preços e equipe e te ajuda a avisar os clientes do link novo. Seu histórico de clientes vai se formando conforme eles agendam.</p></details>
+      <details><summary>Preciso ter domínio .com.br?</summary><p>Não. Sem domínio, o site funciona num endereço nosso. Se quiser o seu (ex.: suabarbearia.com.br), você registra no registro.br (cerca de R$ 40 por ano) e a gente liga ao site, em qualquer plano.</p></details>
+      <details><summary>O que conta como "ajuste no site"?</summary><p>Qualquer pedido de mudança que você faz pra gente: trocar fotos, textos, banner de promoção, cores. Preços, horários e equipe você muda sozinho no painel, e isso não conta.</p></details>
+      <details><summary>Meu cliente precisa baixar aplicativo?</summary><p>Não. Ele agenda pelo navegador do celular, a partir do seu site, do link no Instagram ou do WhatsApp.</p></details>
+      <details><summary>Dá pra cobrar sinal ou pagamento online?</summary><p>Ainda não: hoje o pagamento é no salão e fica registrado no caixa. O Pix com sinal contra falta está nos próximos passos.</p></details>
+    </div>
+  </div></section>
+
+  <section class="final"><div class="wrap revela">
+    <span class="rotulo">Bora?</span>
+    <h2 style="margin-top:16px">Deixa a agenda<br><em class="cobre">trabalhar por você.</em></h2>
+    <div class="ctas"><a class="btn btn-cobre" href="painel.html">Testar 14 dias grátis</a><a class="btn" id="falar" href="#">Falar com a gente</a></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap"><span class="logo" style="font-size:1.2rem">navalha</span><span>© <span id="ano"></span> Navalha · Site, agenda e gestão para barbearias</span></div></footer>
+
+<script src="mock.js"></script>
+<script src="js/comum.js"></script>
+<script src="js/vendas.js"></script>
+</body>
+</html>
